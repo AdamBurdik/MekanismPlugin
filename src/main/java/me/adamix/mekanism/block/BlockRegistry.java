@@ -20,7 +20,8 @@ public class BlockRegistry {
             @Nullable BlockData baseData,
             @NotNull String itemModel,
             @NotNull Transformation transformation
-    ) {}
+    ) {
+    }
 
     private final Map<MekanismBlockType, Definition> registry = new HashMap<>();
 
@@ -75,6 +76,13 @@ public class BlockRegistry {
                 Material.BARRIER,
                 null,
                 "basic_energy_cube",
+                fullBlockTransformation
+        );
+        register(
+                MekanismBlockType.SOLAR_GENERATOR,
+                Material.BARRIER,
+                null,
+                "solar_generator",
                 fullBlockTransformation
         );
     }

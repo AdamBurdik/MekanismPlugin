@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import me.adamix.mekanism.block.handler.BlockHandler;
 import me.adamix.mekanism.block.handler.BlockHandlerRegistry;
 import me.adamix.mekanism.network.NetworkContext;
-import me.adamix.utils.BlockUtils;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.ItemDisplay;

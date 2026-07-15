@@ -5,10 +5,11 @@ import io.papermc.paper.datacomponent.item.CustomModelData;
 import me.adamix.mekanism.block.BlockInstance;
 import me.adamix.mekanism.block.BlockRegistry;
 import me.adamix.mekanism.block.MekanismBlockType;
+import me.adamix.mekanism.block.component.GeneratorEnergyComponent;
 import me.adamix.mekanism.block.component.network.EnergyComponent;
 import me.adamix.mekanism.energy.EnergyStorage;
-import me.adamix.mekanism.network.port.PortType;
 import me.adamix.mekanism.network.NetworkContext;
+import me.adamix.mekanism.network.port.PortType;
 import net.kyori.adventure.key.Key;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -17,10 +18,11 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Map;
 
-public class EnergyCubeHandler implements BlockHandler {
+public class SolarGeneratorHandler implements BlockHandler {
     @Override
     public @NotNull BlockInstance createBlockInstance(
             @NotNull Block block,
@@ -28,25 +30,27 @@ public class EnergyCubeHandler implements BlockHandler {
             @NotNull NetworkContext networkContext
     ) {
         var instance = new BlockInstance();
+        var ports = Map.of(
+                BlockFace.SOUTH, PortType.DISABLED,
+                BlockFace.NORTH, PortType.DISABLED,
+                BlockFace.EAST, PortType.DISABLED,
+                BlockFace.WEST, PortType.DISABLED,
+                BlockFace.UP, PortType.DISABLED,
+                BlockFace.DOWN, PortType.OUTPUT
+        );
+
         instance.add(
                 EnergyComponent.class,
-                new EnergyComponent(
-                        Map.of(
-                                BlockFace.SOUTH, PortType.INPUT,
-                                BlockFace.NORTH, PortType.INPUT,
-                                BlockFace.EAST, PortType.DISABLED,
-                                BlockFace.WEST, PortType.DISABLED,
-                                BlockFace.UP, PortType.INPUT,
-                                BlockFace.DOWN, PortType.INPUT
-                        ),
-                        new EnergyStorage(1000, 100, 100, 0)
+                new GeneratorEnergyComponent(
+                        ports,
+                        new EnergyStorage(1000, 0, 10, 0)
                 )
         );
         return instance;
     }
 
+
     private @NotNull ItemStack createItem(
-            byte state,
             @NotNull String itemModel
     ) {
         ItemStack itemStack = ItemStack.of(Material.PAPER);
@@ -56,19 +60,14 @@ public class EnergyCubeHandler implements BlockHandler {
                 Key.key("mekanism", itemModel)
         );
 
-        CustomModelData customModelData = CustomModelData.customModelData()
-                .addString(Byte.toString(state))
-                .build();
-        itemStack.setData(DataComponentTypes.CUSTOM_MODEL_DATA, customModelData);
         return itemStack;
     }
 
     private void applyMeta(
             @NotNull ItemDisplay entity,
-            byte state,
             @NotNull BlockRegistry.Definition reg
     ) {
-        entity.setItemStack(createItem(state, reg.itemModel()));
+        entity.setItemStack(createItem(reg.itemModel()));
         entity.setTransformation(reg.transformation());
     }
 
@@ -81,17 +80,14 @@ public class EnergyCubeHandler implements BlockHandler {
     ) {
         Location location = block.getLocation();
         Location offsetLoc = location.clone()
-                        .add(0.5, 0.5, 0.5);
-
-        // Todo create state from ports
-        byte state = 0b110011;
+                .add(0.5, 0.5, 0.5);
 
         return location.getWorld()
-            .spawn(
-                    offsetLoc,
-                    ItemDisplay.class,
-                    e -> applyMeta(e, state, reg)
-            );
+                .spawn(
+                        offsetLoc,
+                        ItemDisplay.class,
+                        e -> applyMeta(e, reg)
+                );
     }
 
     @Override

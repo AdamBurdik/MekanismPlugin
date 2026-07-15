@@ -4,7 +4,9 @@ import me.adamix.mekanism.block.component.Component;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -21,6 +23,10 @@ public class BlockInstance {
 
     public boolean has(@NotNull Class<? extends Component> type) {
         return components.containsKey(type);
+    }
+
+    public @NotNull Collection<Component> components() {
+        return components.values();
     }
 
     public void loadAll(@NotNull PersistentDataContainer pdc) {

@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 
 import static me.adamix.utils.Utils.todo;
 
+
 public record TransporterComponent(
         @NotNull NetworkType type
 ) implements Component {

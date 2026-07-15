@@ -2,18 +2,23 @@ package me.adamix.mekanism.command;
 
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
+import lombok.RequiredArgsConstructor;
+import me.adamix.mekanism.block.BlockInstance;
+import me.adamix.mekanism.block.component.Component;
+import me.adamix.mekanism.block.instance.BlockInstanceService;
 import me.adamix.mekanism.network.NetworkService;
+import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Locale;
+
+@RequiredArgsConstructor
 public class DebugCommand implements BasicCommand {
     private final NetworkService networkService;
-
-    public DebugCommand(@NotNull NetworkService networkService) {
-        this.networkService = networkService;
-    }
+    private final BlockInstanceService blockInstanceService;
 
     @Override
     public void execute(
@@ -24,6 +29,11 @@ public class DebugCommand implements BasicCommand {
             return;
         }
 
+        network(player);
+        instance(player);
+    }
+
+    private void network(@NotNull Player player) {
         Block block = player.getTargetBlockExact(10);
         BlockFace face = player.getTargetBlockFace(10);
         if (block == null) {
@@ -41,5 +51,28 @@ public class DebugCommand implements BasicCommand {
         player.sendMessage("===================");
         player.sendMessage("Network id: " + network.getId());
         player.sendMessage("===================");
+    }
+
+    private void instance(@NotNull Player player) {
+        Block block = player.getTargetBlockExact(10);
+        if (block == null) {
+            player.sendMessage("No block found");
+            return;
+        }
+
+        Location location = block.getLocation();
+
+        var opt = blockInstanceService.get(location);
+        if (opt.isEmpty()) {
+            player.sendMessage("No instance found");
+            return;
+        }
+
+        var instance = opt.get();
+
+        player.sendMessage("Components:");
+        for (Component component : instance.components()) {
+            player.sendMessage(" - " + component.toString());
+        }
     }
 }

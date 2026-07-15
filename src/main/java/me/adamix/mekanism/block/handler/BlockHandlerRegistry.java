@@ -17,6 +17,7 @@ public class BlockHandlerRegistry {
         register(MekanismBlockType.ELITE_UNIVERSAL_CABLE, cableHandler);
         register(MekanismBlockType.ULTIMATE_UNIVERSAL_CABLE, cableHandler);
         register(MekanismBlockType.BASIC_ENERGY_CUBE, new EnergyCubeHandler());
+        register(MekanismBlockType.SOLAR_GENERATOR, new SolarGeneratorHandler());
     }
 
     public void register(@NotNull MekanismBlockType type, @NotNull BlockHandler handler) {

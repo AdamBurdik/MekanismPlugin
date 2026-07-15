@@ -5,7 +5,8 @@ import me.adamix.mekanism.block.BlockInstance;
 import me.adamix.mekanism.block.MekanismBlockType;
 import me.adamix.mekanism.block.component.network.EnergyComponent;
 import me.adamix.mekanism.block.component.network.TransporterComponent;
-import me.adamix.mekanism.block.port.PortType;
+import me.adamix.mekanism.network.port.NetworkPort;
+import me.adamix.mekanism.network.port.PortType;
 import me.adamix.mekanism.type.Tuple;
 import me.adamix.utils.BlockUtils;
 import org.bukkit.Location;
@@ -29,12 +30,9 @@ import static me.adamix.utils.Utils.todo;
 @RequiredArgsConstructor
 public class NetworkService {
     private final Logger log;
-    private final Map<UUID, AbstractNetwork> networkMap = new HashMap<>();
-    @Deprecated
-    private final Map<Location, UUID> networkIdMap = new HashMap<>();
-
+    private final Map<UUID, AbstractNetwork> networksById = new HashMap<>();
     private final Map<Location, UUID> transporterToId = new HashMap<>();
-    private final Map<Location, Map<BlockFace, UUID>> portsOf = new HashMap<>();
+    private final Map<Location, Map<BlockFace, NetworkPort>> portsOf = new HashMap<>();
 
     public @NotNull Optional<AbstractNetwork> getNetwork(@NotNull Location location, @NotNull BlockFace face) {
         UUID networkId = null;
@@ -42,14 +40,18 @@ public class NetworkService {
             networkId = transporterToId.get(location);
         }
         if (portsOf.containsKey(location)) {
-            networkId = portsOf.get(location).get(face);
+            var ports = portsOf.get(location)
+                    .get(face);
+            if (ports != null) {
+                networkId = ports.getNetworkId();
+            }
         }
 
         if (networkId == null) {
             return Optional.empty();
         }
 
-        return Optional.ofNullable(networkMap.get(networkId));
+        return Optional.ofNullable(networksById.get(networkId));
     }
 
     public @NotNull AbstractNetwork createNetwork(@NotNull NetworkType type) {
@@ -58,7 +60,7 @@ public class NetworkService {
             case ENERGY -> new EnergyNetwork(id);
         };
 
-        networkMap.put(id, network);
+        networksById.put(id, network);
         log.info("New energy network created: {}", id);
 
         return network;
@@ -113,11 +115,11 @@ public class NetworkService {
             transporterToId.put(cable, networkA.getId());
         }
 
-        for (NetworkConsumer consumer : networkB.getConsumers()) {
-            portsOf.get(consumer.location()).put(consumer.face(), networkA.getId());
+        for (NetworkPort consumer : networkB.getConsumers()) {
+            consumer.setNetworkId(networkA.getId());
         }
 
-        networkMap.remove(networkB.getId());
+        networksById.remove(networkB.getId());
 
         log.info("Merged networks: {} and {}", networkA.getId(), networkB.getId());
     }
@@ -136,12 +138,15 @@ public class NetworkService {
             } else if (portsOf.containsKey(surrounding)) {
                 var ports = portsOf.get(surrounding);
 
-                networkId = ports.get(face.getOppositeFace());
+                if (ports.containsKey(face.getOppositeFace())) {
+                    networkId = ports.get(face.getOppositeFace())
+                        .getNetworkId();
+                }
             }
 
             if (networkId == null) continue;
 
-            AbstractNetwork network = networkMap.get(networkId);
+            AbstractNetwork network = networksById.get(networkId);
             if (network == null) {
                 log.error("Surrounding block has network id that does not exist in network map. Maybe zombie block?");
                 continue;
@@ -161,16 +166,16 @@ public class NetworkService {
             @NotNull BlockInstance instance
     ) {
         if (instance.has(TransporterComponent.class)) {
-           var component = instance.get(TransporterComponent.class)
-                   .orElseThrow();
+            var component = instance.get(TransporterComponent.class)
+                    .orElseThrow();
 
-           registerTransporter(block, type, instance, component);
+            registerTransporter(block, type, instance, component);
         }
         if (instance.has(EnergyComponent.class)) {
             var component = instance.get(EnergyComponent.class)
-                   .orElseThrow();
+                    .orElseThrow();
 
-            registerPorts(block, type, NetworkType.ENERGY, instance, component.ports());
+            registerPorts(block, type, NetworkType.ENERGY, instance, component.getPorts());
         }
     }
 
@@ -186,39 +191,53 @@ public class NetworkService {
         NetworkContext networkContext = scanSurroundings(location);
         Map<BlockFace, AbstractNetwork> map = networkContext.networkMap();
 
-        Map<BlockFace, UUID> faceToId = new HashMap<>();
+        Map<BlockFace, NetworkPort> faceToId = new HashMap<>();
         Set<BlockFace> connectedFaces = new HashSet<>();
 
         map.forEach((face, network) -> {
             connectedFaces.add(face);
-
             PortType portType = ports.get(face);
             if (portType == PortType.DISABLED) return;
 
-            else if (portType == PortType.INPUT) {
-                network.addConsumer(new NetworkConsumer(location, face));
+            var port = new NetworkPort(
+                    location,
+                    face,
+                    portType,
+                    instance,
+                    network.getId()
+            );
+
+            if (portType == PortType.INPUT) {
+                network.addConsumer(port);
             } else if (portType == PortType.OUTPUT) {
-                todo();
+                network.addProducer(port);
             }
 
-            faceToId.put(face, network.getId());
+            faceToId.put(face, port);
         });
 
         ports.forEach((face, portType) -> {
             if (connectedFaces.contains(face)) return;
-
             if (portType == PortType.DISABLED) return;
 
             AbstractNetwork network = createNetwork(networkType);
 
+            var port = new NetworkPort(
+                    location,
+                    face,
+                    portType,
+                    instance,
+                    network.getId()
+            );
+
             if (portType == PortType.INPUT) {
-                network.addConsumer(new NetworkConsumer(location, face));
+                network.addConsumer(port);
             }
             if (portType == PortType.OUTPUT) {
-                todo();
+                network.addProducer(port);
             }
 
-            faceToId.put(face, network.getId());
+            faceToId.put(face, port);
         });
 
         portsOf.put(location, faceToId);
@@ -269,5 +288,14 @@ public class NetworkService {
 
     public void updateBlock(@NotNull Block location) {
         todo();
+    }
+
+    public void tick() {
+        for (AbstractNetwork network : networksById.values()) {
+            if (network instanceof EnergyNetwork energyNetwork) {
+                energyNetwork.tick();
+            }
+            // if (network instanceof ItemNetwork itemNetwork) { tickItemNetwork(itemNetwork); }
+        }
     }
 }

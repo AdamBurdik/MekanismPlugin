@@ -2,12 +2,14 @@ package me.adamix.mekanism.block.component.energy;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.ToString;
 import me.adamix.mekanism.block.component.Component;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.jetbrains.annotations.NotNull;
 
 @AllArgsConstructor
 @Getter
+@ToString
 public class GeneratorEnergyComponent implements Component, EnergyExtractable, EnergyStorage {
     private long stored;
     private final long capacity;

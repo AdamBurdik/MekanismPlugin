@@ -2,8 +2,12 @@ package me.adamix.mekanism.block;
 
 
 import lombok.RequiredArgsConstructor;
+import me.adamix.mekanism.block.component.Component;
+import me.adamix.mekanism.block.component.TickableComponent;
 import me.adamix.mekanism.block.handler.BlockHandler;
 import me.adamix.mekanism.block.handler.BlockHandlerRegistry;
+import me.adamix.mekanism.block.instance.BlockInstanceService;
+import me.adamix.mekanism.block.tick.BlockTickService;
 import me.adamix.mekanism.network.NetworkContext;
 import me.adamix.mekanism.network.NetworkService;
 import me.adamix.utils.BlockUtils;
@@ -15,6 +19,8 @@ import org.jetbrains.annotations.NotNull;
 public class BlockFacade {
     private final BlockService blockService;
     private final NetworkService networkService;
+    private final BlockTickService blockTickService;
+    private final BlockInstanceService blockInstanceService;
 
     private final BlockHandlerRegistry blockHandlerRegistry;
 
@@ -34,11 +40,17 @@ public class BlockFacade {
         NetworkContext networkContext = networkService.scanSurroundings(location);
 
         // 3. Create block instance
-        BlockInstance instance = blockHandler.createBlockInstance(
+        BlockInstance instance = blockInstanceService.create(
                 block,
                 type,
                 networkContext
         );
+
+        for (Component component : instance.components()) {
+            if (component instanceof TickableComponent tickable) {
+                blockTickService.register(tickable);
+            }
+        }
 
         // 4. Save block instance
         // TODO Save the instance somewhere, like BlockInstanceService
