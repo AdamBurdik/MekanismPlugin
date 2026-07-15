@@ -24,7 +24,7 @@ public final class Mekanism extends JavaPlugin {
         BlockRegistry blockRegistry = new BlockRegistry();
         BlockHandlerRegistry blockHandlerRegistry = new BlockHandlerRegistry();
 
-        networkService = new NetworkService(this, getSLF4JLogger());
+        networkService = new NetworkService(getSLF4JLogger());
         blockService = new BlockService(blockRegistry, blockHandlerRegistry);
 
         BlockFacade blockFacade = new BlockFacade(
