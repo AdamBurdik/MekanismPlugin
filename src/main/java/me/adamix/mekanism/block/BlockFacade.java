@@ -77,6 +77,6 @@ public class BlockFacade {
                 networkContext
         );
 
-        networkService.updateBlock(block);
+//        networkService.updateBlock(block);
     }
 }
