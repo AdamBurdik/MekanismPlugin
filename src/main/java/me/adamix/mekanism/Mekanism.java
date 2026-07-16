@@ -42,7 +42,10 @@ public final class Mekanism extends JavaPlugin {
 
         Bukkit.getScheduler().runTaskTimerAsynchronously(
                 this,
-                blockTickService::tick,
+                () -> {
+                    blockTickService.tick();
+                    networkService.tick();
+                },
                 0L,
                 20
         );

@@ -111,12 +111,16 @@ public class NetworkService {
     ) {
         networkA.getTransporters().addAll(networkB.getTransporters());
         networkA.getConsumers().addAll(networkB.getConsumers());
+        networkA.getProducers().addAll(networkB.getProducers());
         for (Location cable : networkB.getTransporters()) {
             transporterToId.put(cable, networkA.getId());
         }
 
         for (NetworkPort consumer : networkB.getConsumers()) {
             consumer.setNetworkId(networkA.getId());
+        }
+        for (NetworkPort producer : networkB.producers) {
+            producer.setNetworkId(networkA.getId());
         }
 
         networksById.remove(networkB.getId());

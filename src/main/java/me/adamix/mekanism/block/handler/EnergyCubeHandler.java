@@ -36,8 +36,8 @@ public class EnergyCubeHandler implements BlockHandler {
                                 BlockFace.NORTH, PortType.INPUT,
                                 BlockFace.EAST, PortType.DISABLED,
                                 BlockFace.WEST, PortType.DISABLED,
-                                BlockFace.UP, PortType.INPUT,
-                                BlockFace.DOWN, PortType.INPUT
+                                BlockFace.UP, PortType.OUTPUT,
+                                BlockFace.DOWN, PortType.OUTPUT
                         ),
                         new EnergyStorage(1000, 100, 100, 0)
                 )
