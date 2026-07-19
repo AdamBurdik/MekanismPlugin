@@ -1,0 +1,11 @@
+{
+	"providers": [
+		{
+			"type": "bitmap",
+			"ascent": 13,
+			"height": 93,
+			"chars": ["\uFF00"],
+			"file": "mekanism:gui/energy_cube.png"
+		}
+	]
+}

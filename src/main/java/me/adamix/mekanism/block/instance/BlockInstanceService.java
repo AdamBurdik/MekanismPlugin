@@ -3,8 +3,7 @@ package me.adamix.mekanism.block.instance;
 import lombok.RequiredArgsConstructor;
 import me.adamix.mekanism.block.BlockInstance;
 import me.adamix.mekanism.block.MekanismBlockType;
-import me.adamix.mekanism.block.handler.BlockHandler;
-import me.adamix.mekanism.block.handler.BlockHandlerRegistry;
+import me.adamix.mekanism.block.registry.BlockRegistry;
 import me.adamix.mekanism.network.NetworkContext;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -16,7 +15,7 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 public class BlockInstanceService {
-    private final BlockHandlerRegistry handlerRegistry;
+    private final BlockRegistry blockRegistry;
     private final Map<Location, BlockInstance> instanceMap = new HashMap<>();
 
     public @NotNull BlockInstance create(
@@ -24,8 +23,9 @@ public class BlockInstanceService {
             @NotNull MekanismBlockType type,
             @NotNull NetworkContext networkContext
     ) {
-        BlockHandler handler = handlerRegistry.getOrThrow(type);
-        BlockInstance instance = handler.createBlockInstance(block, type, networkContext);
+        var definition = blockRegistry.getOrThrow(type);
+        BlockInstance instance = definition.handler()
+                .createBlockInstance(block, type, networkContext, definition);
         instanceMap.put(block.getLocation(), instance);
         return instance;
     }

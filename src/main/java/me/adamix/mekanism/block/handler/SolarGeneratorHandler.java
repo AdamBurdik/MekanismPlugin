@@ -1,9 +1,8 @@
 package me.adamix.mekanism.block.handler;
 
 import io.papermc.paper.datacomponent.DataComponentTypes;
-import io.papermc.paper.datacomponent.item.CustomModelData;
 import me.adamix.mekanism.block.BlockInstance;
-import me.adamix.mekanism.block.BlockRegistry;
+import me.adamix.mekanism.block.registry.BlockDefinition;
 import me.adamix.mekanism.block.MekanismBlockType;
 import me.adamix.mekanism.block.component.GeneratorEnergyComponent;
 import me.adamix.mekanism.block.component.network.EnergyComponent;
@@ -18,7 +17,6 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
-import org.jspecify.annotations.NonNull;
 
 import java.util.Map;
 
@@ -27,25 +25,15 @@ public class SolarGeneratorHandler implements BlockHandler {
     public @NotNull BlockInstance createBlockInstance(
             @NotNull Block block,
             @NotNull MekanismBlockType type,
-            @NotNull NetworkContext networkContext
+            @NotNull NetworkContext networkContext,
+            @NotNull BlockDefinition definition
     ) {
         var instance = new BlockInstance();
-        var ports = Map.of(
-                BlockFace.SOUTH, PortType.DISABLED,
-                BlockFace.NORTH, PortType.DISABLED,
-                BlockFace.EAST, PortType.DISABLED,
-                BlockFace.WEST, PortType.DISABLED,
-                BlockFace.UP, PortType.DISABLED,
-                BlockFace.DOWN, PortType.OUTPUT
-        );
 
-        instance.add(
-                EnergyComponent.class,
-                new GeneratorEnergyComponent(
-                        ports,
-                        new EnergyStorage(1000, 0, 10, 0)
-                )
-        );
+        definition.components().forEach(factory -> {
+            instance.add(factory.create(block));
+        });
+
         return instance;
     }
 
@@ -65,17 +53,17 @@ public class SolarGeneratorHandler implements BlockHandler {
 
     private void applyMeta(
             @NotNull ItemDisplay entity,
-            @NotNull BlockRegistry.Definition reg
+            @NotNull BlockDefinition definition
     ) {
-        entity.setItemStack(createItem(reg.itemModel()));
-        entity.setTransformation(reg.transformation());
+        entity.setItemStack(createItem(definition.itemModel()));
+        entity.setTransformation(definition.transformation());
     }
 
     @Override
     public @NotNull ItemDisplay spawnEntity(
             @NotNull Block block,
             @NotNull MekanismBlockType type,
-            @NotNull BlockRegistry.Definition reg,
+            @NotNull BlockDefinition definition,
             @NotNull NetworkContext networkContext
     ) {
         Location location = block.getLocation();
@@ -86,7 +74,7 @@ public class SolarGeneratorHandler implements BlockHandler {
                 .spawn(
                         offsetLoc,
                         ItemDisplay.class,
-                        e -> applyMeta(e, reg)
+                        e -> applyMeta(e, definition)
                 );
     }
 
@@ -95,7 +83,7 @@ public class SolarGeneratorHandler implements BlockHandler {
             @NotNull Block block,
             @NotNull MekanismBlockType type,
             @NotNull ItemDisplay entity,
-            @NotNull BlockRegistry.Definition reg,
+            @NotNull BlockDefinition definition,
             @NotNull NetworkContext networkContext
     ) {
 

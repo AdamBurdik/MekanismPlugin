@@ -8,5 +8,7 @@ public enum MekanismBlockType {
 
     BASIC_ENERGY_CUBE,
 
-    SOLAR_GENERATOR
+    SOLAR_GENERATOR,
+
+    TEST_BLOCK
 }

@@ -4,15 +4,16 @@ package me.adamix.mekanism.block;
 import lombok.RequiredArgsConstructor;
 import me.adamix.mekanism.block.component.Component;
 import me.adamix.mekanism.block.component.TickableComponent;
-import me.adamix.mekanism.block.handler.BlockHandler;
-import me.adamix.mekanism.block.handler.BlockHandlerRegistry;
 import me.adamix.mekanism.block.instance.BlockInstanceService;
+import me.adamix.mekanism.block.registry.BlockRegistry;
 import me.adamix.mekanism.block.tick.BlockTickService;
+import me.adamix.mekanism.menu.MenuService;
 import me.adamix.mekanism.network.NetworkContext;
 import me.adamix.mekanism.network.NetworkService;
 import me.adamix.utils.BlockUtils;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 @RequiredArgsConstructor
@@ -21,17 +22,14 @@ public class BlockFacade {
     private final NetworkService networkService;
     private final BlockTickService blockTickService;
     private final BlockInstanceService blockInstanceService;
-
-    private final BlockHandlerRegistry blockHandlerRegistry;
+    private final BlockRegistry blockRegistry;
+    private final MenuService menuService;
 
     public void placeBlock(
             @NotNull Block block,
             @NotNull MekanismBlockType type
     ) {
         Location location = block.getLocation();
-
-        // Get stuff from registry
-        BlockHandler blockHandler = blockHandlerRegistry.getOrThrow(type);
 
         // 1. Place base block
         blockService.placeBlock(block, type);
@@ -90,5 +88,34 @@ public class BlockFacade {
         );
 
 //        networkService.updateBlock(block);
+    }
+
+    public void onBlockClick(
+            @NotNull Player player,
+            @NotNull Block block
+    ) {
+        if (!blockService.isMekanismBlock(block)) {
+            return;
+        }
+
+        var type = blockService.getType(block)
+                .orElseThrow();
+
+        var definition = blockRegistry.get(type)
+                .orElseThrow();
+
+        if (definition.menu() == null) {
+            return;
+        }
+
+        var instance = blockInstanceService.get(block.getLocation())
+                .orElseThrow();
+
+        menuService.open(
+                player,
+                block.getLocation(),
+                definition.menu(),
+                instance
+        );
     }
 }

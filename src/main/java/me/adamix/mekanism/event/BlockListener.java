@@ -5,10 +5,13 @@ import me.adamix.mekanism.block.BlockService;
 import me.adamix.mekanism.block.MekanismBlockType;
 import me.adamix.mekanism.data.MekanismKeys;
 import me.adamix.mekanism.network.NetworkService;
+import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.jetbrains.annotations.NotNull;
 
 
@@ -36,5 +39,15 @@ public class BlockListener implements Listener {
     @EventHandler
     public void onBlockBreak(@NotNull BlockBreakEvent event) {
 
+    }
+
+    @EventHandler
+    public void onRightClick(@NotNull PlayerInteractEvent event) {
+        Block block = event.getClickedBlock();
+        if (block == null) return;
+
+        if (event.getHand() != EquipmentSlot.HAND) return;
+
+        blockFacade.onBlockClick(event.getPlayer(), block);
     }
 }

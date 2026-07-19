@@ -3,6 +3,8 @@ package me.adamix.mekanism.block;
 import lombok.extern.slf4j.Slf4j;
 import me.adamix.mekanism.block.handler.BlockHandler;
 import me.adamix.mekanism.block.handler.BlockHandlerRegistry;
+import me.adamix.mekanism.block.registry.BlockDefinition;
+import me.adamix.mekanism.block.registry.BlockRegistry;
 import me.adamix.mekanism.network.NetworkContext;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -11,32 +13,30 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 public class BlockService {
     private final BlockRegistry blockRegistry;
-    private final BlockHandlerRegistry handlerRegistry;
 
     private final Map<Location, MekanismBlockType> locationToType = new HashMap<>();
     private final Map<Location, ItemDisplay> locationToEntity = new HashMap<>();
 
     public BlockService(
-            @NotNull BlockRegistry blockRegistry,
-            @NotNull BlockHandlerRegistry handlerRegistry
+            @NotNull BlockRegistry blockRegistry
     ) {
         this.blockRegistry = blockRegistry;
-        this.handlerRegistry = handlerRegistry;
     }
 
     public void placeBlock(
             @NotNull Block block,
             @NotNull MekanismBlockType type
     ) {
-        BlockRegistry.Definition reg = blockRegistry.getOrThrow(type);
+        BlockDefinition definition = blockRegistry.getOrThrow(type);
 
-        block.setType(reg.base());
-        if (reg.baseData() != null) {
-            block.setBlockData(reg.baseData());
+        block.setType(definition.base());
+        if (definition.baseData() != null) {
+            block.setBlockData(definition.baseData());
         }
 
         locationToType.put(block.getLocation(), type);
@@ -47,10 +47,9 @@ public class BlockService {
             @NotNull MekanismBlockType type,
             @NotNull NetworkContext networkContext
             ) {
-        BlockHandler handler = handlerRegistry.getOrThrow(type);
-        BlockRegistry.Definition definition = blockRegistry.getOrThrow(type);
+        BlockDefinition definition = blockRegistry.getOrThrow(type);
 
-        var entity = handler.spawnEntity(
+        var entity = definition.handler().spawnEntity(
                 block,
                 type,
                 definition,
@@ -61,6 +60,10 @@ public class BlockService {
 
     public boolean isMekanismBlock(@NotNull Block block) {
         return locationToType.containsKey(block.getLocation());
+    }
+
+    public @NotNull Optional<MekanismBlockType> getType(@NotNull Block block) {
+        return Optional.ofNullable(locationToType.get(block.getLocation()));
     }
 
     public void updateBlock(
@@ -77,10 +80,9 @@ public class BlockService {
             throw new IllegalStateException("Block does not contain an entity: " + location);
         }
 
-        BlockRegistry.Definition reg = blockRegistry.getOrThrow(type);
+        BlockDefinition reg = blockRegistry.getOrThrow(type);
 
-        BlockHandler handler = handlerRegistry.getOrThrow(type);
-        handler.updateBlock(
+        reg.handler().updateBlock(
                 block,
                 type,
                 itemDisplay,

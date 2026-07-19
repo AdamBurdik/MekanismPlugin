@@ -1,7 +1,7 @@
 package me.adamix.mekanism.block.handler;
 
 import me.adamix.mekanism.block.BlockInstance;
-import me.adamix.mekanism.block.BlockRegistry;
+import me.adamix.mekanism.block.registry.BlockDefinition;
 import me.adamix.mekanism.block.MekanismBlockType;
 import me.adamix.mekanism.network.NetworkContext;
 import org.bukkit.block.Block;
@@ -12,13 +12,14 @@ public interface BlockHandler {
     @NotNull BlockInstance createBlockInstance(
             @NotNull Block block,
             @NotNull MekanismBlockType type,
-            @NotNull NetworkContext networkContext
+            @NotNull NetworkContext networkContext,
+            @NotNull BlockDefinition definition
     );
 
     @NotNull ItemDisplay spawnEntity(
             @NotNull Block block,
             @NotNull MekanismBlockType type,
-            @NotNull BlockRegistry.Definition reg,
+            @NotNull BlockDefinition definition,
             @NotNull NetworkContext networkContext
     );
 
@@ -26,7 +27,7 @@ public interface BlockHandler {
             @NotNull Block block,
             @NotNull MekanismBlockType type,
             @NotNull ItemDisplay entity,
-            @NotNull BlockRegistry.Definition reg,
+            @NotNull BlockDefinition definition,
             @NotNull NetworkContext networkContext
     );
 }
