@@ -6,6 +6,8 @@ plugins {
     alias(libs.plugins.resource.factory.paper)
 }
 
+var projectVersion = project.properties["version"] as String
+
 repositories {
     mavenCentral()
 }
@@ -21,7 +23,7 @@ paperPluginYaml {
     main = "me.adamix.mekanism.Mekanism"
 
     apiVersion = "26.2"
-    version = "0.0.1"
+    version = projectVersion
 }
 
 
@@ -32,6 +34,7 @@ java {
 tasks {
     shadowJar {
         relocate("com.jeff_media.customblockdata", "me.adamix.mekanism.customblockdata")
+        archiveClassifier.set("")
     }
     build {
         dependsOn(shadowJar)
