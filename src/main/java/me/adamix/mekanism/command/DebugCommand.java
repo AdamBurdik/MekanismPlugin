@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import me.adamix.mekanism.block.component.Component;
 import me.adamix.mekanism.block.instance.BlockInstanceService;
 import me.adamix.mekanism.network.NetworkService;
+import me.adamix.mekanism.type.WorldPos;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -38,7 +39,7 @@ public class DebugCommand implements BasicCommand {
             return;
         }
 
-        var opt = networkService.getNetwork(block.getLocation(), face);
+        var opt = networkService.getNetwork(WorldPos.of(block), face);
         if (opt.isEmpty()) {
             player.sendMessage("No network found for this block");
             return;

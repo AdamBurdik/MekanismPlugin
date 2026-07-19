@@ -1,8 +1,11 @@
 package me.adamix.mekanism.network;
 
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import me.adamix.mekanism.network.port.NetworkPort;
+import me.adamix.mekanism.type.BlockPos;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.jetbrains.annotations.NotNull;
@@ -14,15 +17,13 @@ import java.util.UUID;
 import static me.adamix.utils.BlockUtils.CARDINAL_DIRECTIONS;
 
 @Getter
+@RequiredArgsConstructor
 public abstract class AbstractNetwork {
-    protected final UUID id;
-    protected final Set<Location> transporters = new HashSet<>();
+    protected final @NotNull UUID id;
+    protected final @NotNull World world;
+    protected final Set<BlockPos> transporters = new HashSet<>();
     protected final Set<NetworkPort> consumers = new HashSet<>();
     protected final Set<NetworkPort> producers = new HashSet<>();
-
-    public AbstractNetwork(@NotNull UUID id) {
-        this.id = id;
-    }
 
     public abstract @NotNull NetworkType type();
 
@@ -33,7 +34,7 @@ public abstract class AbstractNetwork {
     public void addTransporter(
             @NotNull Block block
     ) {
-        transporters.add(block.getLocation());
+        transporters.add(BlockPos.of(block));
     }
 
     public void addConsumer(

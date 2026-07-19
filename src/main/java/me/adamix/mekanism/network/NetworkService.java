@@ -7,9 +7,11 @@ import me.adamix.mekanism.block.component.network.EnergyComponent;
 import me.adamix.mekanism.block.component.network.TransporterComponent;
 import me.adamix.mekanism.network.port.NetworkPort;
 import me.adamix.mekanism.network.port.PortType;
+import me.adamix.mekanism.type.BlockPos;
 import me.adamix.mekanism.type.Tuple;
+import me.adamix.mekanism.type.WorldPos;
 import me.adamix.utils.BlockUtils;
-import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.jetbrains.annotations.NotNull;
@@ -31,16 +33,16 @@ import static me.adamix.utils.Utils.todo;
 public class NetworkService {
     private final Logger log;
     private final Map<UUID, AbstractNetwork> networksById = new HashMap<>();
-    private final Map<Location, UUID> transporterToId = new HashMap<>();
-    private final Map<Location, Map<BlockFace, NetworkPort>> portsOf = new HashMap<>();
+    private final Map<WorldPos, UUID> transporterToId = new HashMap<>();
+    private final Map<WorldPos, Map<BlockFace, NetworkPort>> portsOf = new HashMap<>();
 
-    public @NotNull Optional<AbstractNetwork> getNetwork(@NotNull Location location, @NotNull BlockFace face) {
+    public @NotNull Optional<AbstractNetwork> getNetwork(@NotNull WorldPos pos, @NotNull BlockFace face) {
         UUID networkId = null;
-        if (transporterToId.containsKey(location)) {
-            networkId = transporterToId.get(location);
+        if (transporterToId.containsKey(pos)) {
+            networkId = transporterToId.get(pos);
         }
-        if (portsOf.containsKey(location)) {
-            var ports = portsOf.get(location)
+        if (portsOf.containsKey(pos)) {
+            var ports = portsOf.get(pos)
                     .get(face);
             if (ports != null) {
                 networkId = ports.getNetworkId();
@@ -54,10 +56,10 @@ public class NetworkService {
         return Optional.ofNullable(networksById.get(networkId));
     }
 
-    public @NotNull AbstractNetwork createNetwork(@NotNull NetworkType type) {
+    public @NotNull AbstractNetwork createNetwork(@NotNull NetworkType type, @NotNull World world) {
         UUID id = UUID.randomUUID();
         AbstractNetwork network = switch (type) {
-            case ENERGY -> new EnergyNetwork(id);
+            case ENERGY -> new EnergyNetwork(id, world);
         };
 
         networksById.put(id, network);
@@ -66,20 +68,20 @@ public class NetworkService {
         return network;
     }
 
-    private @NotNull Set<Location> bfs(
-            @NotNull Set<Location> nodes,
-            @NotNull Location starting
+    private @NotNull Set<BlockPos> bfs(
+            @NotNull Set<BlockPos> nodes,
+            @NotNull BlockPos starting
     ) {
-        Set<Location> visited = new HashSet<>();
-        Queue<Location> queue = new ArrayDeque<>();
+        Set<BlockPos> visited = new HashSet<>();
+        Queue<BlockPos> queue = new ArrayDeque<>();
 
         visited.add(starting);
         queue.add(starting);
 
         while (!queue.isEmpty()) {
-            Location current = queue.poll();
+            BlockPos current = queue.poll();
 
-            for (Location surrounding : getSurrounding(nodes, current)) {
+            for (BlockPos surrounding : getSurrounding(nodes, current)) {
                 if (!visited.contains(surrounding)) {
                     visited.add(surrounding);
                     queue.add(surrounding);
@@ -90,15 +92,15 @@ public class NetworkService {
         return visited;
     }
 
-    public @NotNull Set<Location> getSurrounding(
-            @NotNull Set<Location> nodes,
-            @NotNull Location location
+    public @NotNull Set<BlockPos> getSurrounding(
+            @NotNull Set<BlockPos> nodes,
+            @NotNull BlockPos pos
     ) {
-        Set<Location> neighbors = new HashSet<>();
+        Set<BlockPos> neighbors = new HashSet<>();
 
         for (BlockFace face : CARDINAL_DIRECTIONS) {
-            Location neighbor = location.clone()
-                    .add(face.getModX(), face.getModY(), face.getModZ());
+            BlockPos neighbor = pos.offset(face.getModX(), face.getModY(), face.getModZ());
+
             if (nodes.contains(neighbor)) neighbors.add(neighbor);
         }
 
@@ -112,8 +114,8 @@ public class NetworkService {
         networkA.getTransporters().addAll(networkB.getTransporters());
         networkA.getConsumers().addAll(networkB.getConsumers());
         networkA.getProducers().addAll(networkB.getProducers());
-        for (Location cable : networkB.getTransporters()) {
-            transporterToId.put(cable, networkA.getId());
+        for (BlockPos cable : networkB.getTransporters()) {
+            transporterToId.put(cable.withWorld(networkA.getWorld()), networkA.getId());
         }
 
         for (NetworkPort consumer : networkB.getConsumers()) {
@@ -128,11 +130,11 @@ public class NetworkService {
         log.info("Merged networks: {} and {}", networkA.getId(), networkB.getId());
     }
 
-    public @NotNull NetworkContext scanSurroundings(@NotNull Location location) {
+    public @NotNull NetworkContext scanSurroundings(@NotNull WorldPos pos) {
         Map<BlockFace, AbstractNetwork> map = new HashMap<>();
 
-        for (Tuple<Location, BlockFace> tuple : BlockUtils.getSurroundings(location)) {
-            Location surrounding = tuple.left();
+        for (Tuple<WorldPos, BlockFace> tuple : BlockUtils.getSurroundings(pos)) {
+            WorldPos surrounding = tuple.left();
             BlockFace face = tuple.right();
 
             UUID networkId = null;
@@ -190,9 +192,9 @@ public class NetworkService {
             @NotNull BlockInstance instance,
             @NotNull Map<BlockFace, PortType> ports
     ) {
-        Location location = block.getLocation();
+        WorldPos pos = WorldPos.of(block);
 
-        NetworkContext networkContext = scanSurroundings(location);
+        NetworkContext networkContext = scanSurroundings(pos);
         Map<BlockFace, AbstractNetwork> map = networkContext.networkMap();
 
         Map<BlockFace, NetworkPort> faceToId = new HashMap<>();
@@ -204,7 +206,8 @@ public class NetworkService {
             if (portType == PortType.DISABLED) return;
 
             var port = new NetworkPort(
-                    location,
+                    pos.block(),
+                    block.getWorld(),
                     face,
                     portType,
                     instance,
@@ -224,10 +227,11 @@ public class NetworkService {
             if (connectedFaces.contains(face)) return;
             if (portType == PortType.DISABLED) return;
 
-            AbstractNetwork network = createNetwork(networkType);
+            AbstractNetwork network = createNetwork(networkType, block.getWorld());
 
             var port = new NetworkPort(
-                    location,
+                    pos.block(),
+                    block.getWorld(),
                     face,
                     portType,
                     instance,
@@ -244,7 +248,7 @@ public class NetworkService {
             faceToId.put(face, port);
         });
 
-        portsOf.put(location, faceToId);
+        portsOf.put(pos, faceToId);
     }
 
     private void registerTransporter(
@@ -253,17 +257,17 @@ public class NetworkService {
             @NotNull BlockInstance instance,
             @NotNull TransporterComponent component
     ) {
-        Location location = block.getLocation();
+        WorldPos pos = WorldPos.of(block);
 
-        NetworkContext networkContext = scanSurroundings(location);
+        NetworkContext networkContext = scanSurroundings(pos);
         Map<BlockFace, AbstractNetwork> map = networkContext.networkMap();
         var surroundingNetworks = new HashSet<>(map.values());
 
         if (surroundingNetworks.isEmpty()) {
             // Create new network
-            AbstractNetwork network = createNetwork(component.type());
+            AbstractNetwork network = createNetwork(component.type(), block.getWorld());
             network.addTransporter(block);
-            transporterToId.put(location, network.getId());
+            transporterToId.put(pos, network.getId());
         } else if (surroundingNetworks.size() == 1) {
             // Join this network
             var network = map.values()
@@ -272,7 +276,7 @@ public class NetworkService {
                     .orElseThrow();
 
             network.addTransporter(block);
-            transporterToId.put(location, network.getId());
+            transporterToId.put(pos, network.getId());
             log.info("Added cable to network: {}", network.id);
         } else {
             // Merge networks
@@ -286,7 +290,7 @@ public class NetworkService {
                 mergeNetworks(network, otherNetwork);
             }
             network.addTransporter(block);
-            transporterToId.put(location, network.getId());
+            transporterToId.put(pos, network.getId());
         }
     }
 

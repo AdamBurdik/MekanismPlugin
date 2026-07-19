@@ -10,8 +10,8 @@ import me.adamix.mekanism.block.tick.BlockTickService;
 import me.adamix.mekanism.menu.MenuService;
 import me.adamix.mekanism.network.NetworkContext;
 import me.adamix.mekanism.network.NetworkService;
+import me.adamix.mekanism.type.WorldPos;
 import me.adamix.utils.BlockUtils;
-import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -29,13 +29,13 @@ public class BlockFacade {
             @NotNull Block block,
             @NotNull MekanismBlockType type
     ) {
-        Location location = block.getLocation();
+        WorldPos pos = WorldPos.of(block);
 
         // 1. Place base block
         blockService.placeBlock(block, type);
 
         // 2. Scan surrounding blocks for their network
-        NetworkContext networkContext = networkService.scanSurroundings(location);
+        NetworkContext networkContext = networkService.scanSurroundings(pos);
 
         // 3. Create block instance
         BlockInstance instance = blockInstanceService.create(
@@ -74,7 +74,7 @@ public class BlockFacade {
     }
 
     public void updateBlock(@NotNull Block block) {
-        Location location = block.getLocation();
+        WorldPos location = WorldPos.of(block);
 
         if (!blockService.isMekanismBlock(block)) {
             return;

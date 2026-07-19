@@ -3,6 +3,7 @@ package me.adamix.mekanism.network;
 import lombok.Getter;
 import me.adamix.mekanism.block.component.network.EnergyComponent;
 import me.adamix.mekanism.network.port.NetworkPort;
+import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -15,8 +16,8 @@ import java.util.UUID;
 @Getter
 @SuppressWarnings("UnstableApiUsage")
 public class EnergyNetwork extends AbstractNetwork {
-    public EnergyNetwork(@NotNull UUID id) {
-        super(id);
+    public EnergyNetwork(@NotNull UUID id, @NotNull World world) {
+        super(id, world);
     }
 
     @Override
