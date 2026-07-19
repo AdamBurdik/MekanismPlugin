@@ -2,23 +2,16 @@ package me.adamix.mekanism.block.handler;
 
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import me.adamix.mekanism.block.BlockInstance;
-import me.adamix.mekanism.block.registry.BlockDefinition;
 import me.adamix.mekanism.block.MekanismBlockType;
-import me.adamix.mekanism.block.component.GeneratorEnergyComponent;
-import me.adamix.mekanism.block.component.network.EnergyComponent;
-import me.adamix.mekanism.energy.EnergyStorage;
+import me.adamix.mekanism.block.registry.BlockDefinition;
 import me.adamix.mekanism.network.NetworkContext;
-import me.adamix.mekanism.network.port.PortType;
 import net.kyori.adventure.key.Key;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Map;
 
 public class SolarGeneratorHandler implements BlockHandler {
     @Override

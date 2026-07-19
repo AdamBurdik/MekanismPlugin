@@ -12,7 +12,6 @@ import me.adamix.mekanism.block.handler.UniversalCableHandler;
 import me.adamix.mekanism.energy.EnergyStorage;
 import me.adamix.mekanism.menu.MenuDefinition;
 import me.adamix.mekanism.menu.widget.IndicatorWidget;
-import me.adamix.mekanism.menu.widget.ItemSlotWidget;
 import me.adamix.mekanism.network.NetworkType;
 import me.adamix.mekanism.network.port.PortType;
 import net.kyori.adventure.key.Key;
@@ -29,7 +28,6 @@ import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

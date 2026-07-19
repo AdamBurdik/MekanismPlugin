@@ -1,8 +1,6 @@
 package me.adamix.mekanism.block;
 
 import lombok.extern.slf4j.Slf4j;
-import me.adamix.mekanism.block.handler.BlockHandler;
-import me.adamix.mekanism.block.handler.BlockHandlerRegistry;
 import me.adamix.mekanism.block.registry.BlockDefinition;
 import me.adamix.mekanism.block.registry.BlockRegistry;
 import me.adamix.mekanism.network.NetworkContext;

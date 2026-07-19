@@ -3,7 +3,6 @@ package me.adamix.mekanism.command;
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import lombok.RequiredArgsConstructor;
-import me.adamix.mekanism.block.BlockInstance;
 import me.adamix.mekanism.block.component.Component;
 import me.adamix.mekanism.block.instance.BlockInstanceService;
 import me.adamix.mekanism.network.NetworkService;
@@ -12,8 +11,6 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Locale;
 
 @RequiredArgsConstructor
 public class DebugCommand implements BasicCommand {

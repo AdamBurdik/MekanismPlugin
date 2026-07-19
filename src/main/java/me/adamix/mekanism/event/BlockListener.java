@@ -1,10 +1,8 @@
 package me.adamix.mekanism.event;
 
 import me.adamix.mekanism.block.BlockFacade;
-import me.adamix.mekanism.block.BlockService;
 import me.adamix.mekanism.block.MekanismBlockType;
 import me.adamix.mekanism.data.MekanismKeys;
-import me.adamix.mekanism.network.NetworkService;
 import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

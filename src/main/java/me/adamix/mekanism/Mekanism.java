@@ -2,10 +2,9 @@ package me.adamix.mekanism;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.adamix.mekanism.block.BlockFacade;
-import me.adamix.mekanism.block.registry.BlockRegistry;
 import me.adamix.mekanism.block.BlockService;
-import me.adamix.mekanism.block.handler.BlockHandlerRegistry;
 import me.adamix.mekanism.block.instance.BlockInstanceService;
+import me.adamix.mekanism.block.registry.BlockRegistry;
 import me.adamix.mekanism.block.tick.BlockTickService;
 import me.adamix.mekanism.command.DebugCommand;
 import me.adamix.mekanism.command.GiveCommand;

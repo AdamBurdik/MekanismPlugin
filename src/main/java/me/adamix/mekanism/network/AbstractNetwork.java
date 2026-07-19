@@ -2,17 +2,12 @@ package me.adamix.mekanism.network;
 
 import lombok.Getter;
 import me.adamix.mekanism.network.port.NetworkPort;
-import me.adamix.mekanism.transporter.TransportTier;
-import me.adamix.mekanism.transporter.TransporterType;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.ItemDisplay;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 

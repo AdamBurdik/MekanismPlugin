@@ -1,8 +1,8 @@
 package me.adamix.mekanism.block.handler;
 
 import me.adamix.mekanism.block.BlockInstance;
-import me.adamix.mekanism.block.registry.BlockDefinition;
 import me.adamix.mekanism.block.MekanismBlockType;
+import me.adamix.mekanism.block.registry.BlockDefinition;
 import me.adamix.mekanism.network.NetworkContext;
 import org.bukkit.block.Block;
 import org.bukkit.entity.ItemDisplay;
