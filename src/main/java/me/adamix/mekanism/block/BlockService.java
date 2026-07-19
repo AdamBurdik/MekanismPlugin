@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import me.adamix.mekanism.block.registry.BlockDefinition;
 import me.adamix.mekanism.block.registry.BlockRegistry;
 import me.adamix.mekanism.network.NetworkContext;
+import me.adamix.mekanism.type.WorldPos;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.ItemDisplay;
@@ -17,8 +18,8 @@ import java.util.Optional;
 public class BlockService {
     private final BlockRegistry blockRegistry;
 
-    private final Map<Location, MekanismBlockType> locationToType = new HashMap<>();
-    private final Map<Location, ItemDisplay> locationToEntity = new HashMap<>();
+    private final Map<WorldPos, MekanismBlockType> locationToType = new HashMap<>();
+    private final Map<WorldPos, ItemDisplay> locationToEntity = new HashMap<>();
 
     public BlockService(
             @NotNull BlockRegistry blockRegistry
@@ -37,7 +38,7 @@ public class BlockService {
             block.setBlockData(definition.baseData());
         }
 
-        locationToType.put(block.getLocation(), type);
+        locationToType.put(WorldPos.of(block), type);
     }
 
     public void spawnEntity(
@@ -53,22 +54,22 @@ public class BlockService {
                 definition,
                 networkContext
         );
-        locationToEntity.put(block.getLocation(), entity);
+        locationToEntity.put(WorldPos.of(block), entity);
     }
 
     public boolean isMekanismBlock(@NotNull Block block) {
-        return locationToType.containsKey(block.getLocation());
+        return locationToType.containsKey(WorldPos.of(block));
     }
 
     public @NotNull Optional<MekanismBlockType> getType(@NotNull Block block) {
-        return Optional.ofNullable(locationToType.get(block.getLocation()));
+        return Optional.ofNullable(locationToType.get(WorldPos.of(block)));
     }
 
     public void updateBlock(
             @NotNull Block block,
             @NotNull NetworkContext networkContext
     ) {
-        Location location = block.getLocation();
+        WorldPos location = WorldPos.of(block);
 
         MekanismBlockType type = locationToType.get(location);
         if (type == null) return;

@@ -113,7 +113,7 @@ public class BlockFacade {
 
         menuService.open(
                 player,
-                block.getLocation(),
+                WorldPos.of(block),
                 definition.menu(),
                 instance
         );

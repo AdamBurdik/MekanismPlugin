@@ -17,6 +17,8 @@ import me.adamix.mekanism.menu.MenuDefinition;
 import me.adamix.mekanism.menu.MenuService;
 import me.adamix.mekanism.menu.widget.IndicatorWidget;
 import me.adamix.mekanism.network.port.PortType;
+import me.adamix.mekanism.type.BlockPos;
+import me.adamix.mekanism.type.WorldPos;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -144,7 +146,10 @@ public class TestCommand implements BasicCommand {
 
         menuService.open(
                 player,
-                player.getLocation().set(0, 0, 0),
+                new WorldPos(
+                        player.getLocation().getWorld().getName(),
+                        new BlockPos(0, 0, 0)
+                ),
                 menu,
                 new BlockInstance()
         );

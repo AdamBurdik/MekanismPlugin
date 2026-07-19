@@ -1,5 +1,6 @@
 package me.adamix.mekanism.type;
 
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +13,7 @@ public record BlockPos(
     }
 
     public @NotNull WorldPos withWorld(@NotNull World world) {
-        return new WorldPos(world, this);
+        return new WorldPos(world.getName(), this);
     }
 
     public static @NotNull BlockPos of(@NotNull Block block) {
@@ -20,6 +21,14 @@ public record BlockPos(
                 block.getX(),
                 block.getY(),
                 block.getZ()
+        );
+    }
+
+    public static @NotNull BlockPos of(@NotNull Location location) {
+        return new BlockPos(
+                location.blockX(),
+                location.blockY(),
+                location.blockZ()
         );
     }
 }

@@ -5,6 +5,7 @@ import me.adamix.mekanism.menu.widget.ButtonWidget;
 import me.adamix.mekanism.menu.widget.IndicatorWidget;
 import me.adamix.mekanism.menu.widget.ItemSlotWidget;
 import me.adamix.mekanism.menu.widget.WidgetDefinition;
+import me.adamix.mekanism.type.WorldPos;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
@@ -26,7 +27,7 @@ public class MenuService {
 
     public void open(
             @NotNull Player player,
-            @NotNull Location location,
+            @NotNull WorldPos pos,
             @NotNull MenuDefinition definition,
             @NotNull BlockInstance instance
     ) {
@@ -39,7 +40,7 @@ public class MenuService {
             render(inv, widget, instance);
         }
 
-        openMenus.put(player.getUniqueId(), new OpenMenuContext(location, definition, instance, inv));
+        openMenus.put(player.getUniqueId(), new OpenMenuContext(pos, definition, instance, inv));
         player.openInventory(inv);
     }
 
