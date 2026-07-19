@@ -56,10 +56,10 @@ public class NetworkService {
         return Optional.ofNullable(networksById.get(networkId));
     }
 
-    public @NotNull AbstractNetwork createNetwork(@NotNull NetworkType type, @NotNull World world) {
+    public @NotNull AbstractNetwork createNetwork(@NotNull NetworkType type, @NotNull String worldName) {
         UUID id = UUID.randomUUID();
         AbstractNetwork network = switch (type) {
-            case ENERGY -> new EnergyNetwork(id, world);
+            case ENERGY -> new EnergyNetwork(id, worldName);
         };
 
         networksById.put(id, network);
@@ -68,7 +68,7 @@ public class NetworkService {
         return network;
     }
 
-    private @NotNull Set<BlockPos> bfs(
+    @NotNull Set<BlockPos> bfs(
             @NotNull Set<BlockPos> nodes,
             @NotNull BlockPos starting
     ) {
@@ -92,7 +92,7 @@ public class NetworkService {
         return visited;
     }
 
-    public @NotNull Set<BlockPos> getSurrounding(
+    @NotNull Set<BlockPos> getSurrounding(
             @NotNull Set<BlockPos> nodes,
             @NotNull BlockPos pos
     ) {
@@ -115,7 +115,7 @@ public class NetworkService {
         networkA.getConsumers().addAll(networkB.getConsumers());
         networkA.getProducers().addAll(networkB.getProducers());
         for (BlockPos cable : networkB.getTransporters()) {
-            transporterToId.put(cable.withWorld(networkA.getWorld()), networkA.getId());
+            transporterToId.put(cable.withWorld(networkA.getWorldName()), networkA.getId());
         }
 
         for (NetworkPort consumer : networkB.getConsumers()) {
@@ -207,7 +207,7 @@ public class NetworkService {
 
             var port = new NetworkPort(
                     pos.block(),
-                    block.getWorld(),
+                    block.getWorld().getName(),
                     face,
                     portType,
                     instance,
@@ -227,11 +227,11 @@ public class NetworkService {
             if (connectedFaces.contains(face)) return;
             if (portType == PortType.DISABLED) return;
 
-            AbstractNetwork network = createNetwork(networkType, block.getWorld());
+            AbstractNetwork network = createNetwork(networkType, block.getWorld().getName());
 
             var port = new NetworkPort(
                     pos.block(),
-                    block.getWorld(),
+                    block.getWorld().getName(),
                     face,
                     portType,
                     instance,
@@ -265,7 +265,7 @@ public class NetworkService {
 
         if (surroundingNetworks.isEmpty()) {
             // Create new network
-            AbstractNetwork network = createNetwork(component.type(), block.getWorld());
+            AbstractNetwork network = createNetwork(component.type(), block.getWorld().getName());
             network.addTransporter(block);
             transporterToId.put(pos, network.getId());
         } else if (surroundingNetworks.size() == 1) {

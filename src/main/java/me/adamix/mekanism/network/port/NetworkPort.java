@@ -5,7 +5,6 @@ import lombok.Data;
 import me.adamix.mekanism.block.BlockInstance;
 import me.adamix.mekanism.block.component.network.EnergyComponent;
 import me.adamix.mekanism.type.BlockPos;
-import org.bukkit.World;
 import org.bukkit.block.BlockFace;
 import org.jetbrains.annotations.NotNull;
 
@@ -16,7 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class NetworkPort {
     private final @NotNull BlockPos pos;
-    private final @NotNull World world;
+    private final @NotNull String worldName;
     private final @NotNull BlockFace blockFace;
     private final @NotNull PortType portType;
     private final @NotNull BlockInstance blockInstance;

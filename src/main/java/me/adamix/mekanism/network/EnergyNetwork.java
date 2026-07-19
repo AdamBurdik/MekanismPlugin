@@ -16,8 +16,8 @@ import java.util.UUID;
 @Getter
 @SuppressWarnings("UnstableApiUsage")
 public class EnergyNetwork extends AbstractNetwork {
-    public EnergyNetwork(@NotNull UUID id, @NotNull World world) {
-        super(id, world);
+    public EnergyNetwork(@NotNull UUID id, @NotNull String worldName) {
+        super(id, worldName);
     }
 
     @Override
@@ -78,7 +78,7 @@ public void tick() {
     }
 }
 
-private Map<EnergyComponent, Long> redistributeEnergy(
+Map<EnergyComponent, Long> redistributeEnergy(
         long totalAvailable,
         @NotNull List<NetworkPort> consumers
 ) {

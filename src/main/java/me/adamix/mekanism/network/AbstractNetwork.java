@@ -20,7 +20,7 @@ import static me.adamix.utils.BlockUtils.CARDINAL_DIRECTIONS;
 @RequiredArgsConstructor
 public abstract class AbstractNetwork {
     protected final @NotNull UUID id;
-    protected final @NotNull World world;
+    protected final @NotNull String worldName;
     protected final Set<BlockPos> transporters = new HashSet<>();
     protected final Set<NetworkPort> consumers = new HashSet<>();
     protected final Set<NetworkPort> producers = new HashSet<>();

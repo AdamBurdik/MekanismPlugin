@@ -17,6 +17,7 @@ dependencies {
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
     implementation(libs.custom.block.data)
+    testImplementation(libs.junit)
 }
 
 paperPluginYaml {

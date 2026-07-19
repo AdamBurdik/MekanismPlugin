@@ -16,6 +16,11 @@ public record BlockPos(
         return new WorldPos(world.getName(), this);
     }
 
+        public @NotNull WorldPos withWorld(@NotNull String worldName) {
+        return new WorldPos(worldName, this);
+    }
+
+
     public static @NotNull BlockPos of(@NotNull Block block) {
         return new BlockPos(
                 block.getX(),
