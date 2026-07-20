@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import me.adamix.mekanism.network.port.NetworkPort;
 import me.adamix.mekanism.type.BlockPos;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.jetbrains.annotations.NotNull;

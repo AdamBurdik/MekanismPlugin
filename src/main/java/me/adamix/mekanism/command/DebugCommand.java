@@ -7,7 +7,6 @@ import me.adamix.mekanism.block.component.Component;
 import me.adamix.mekanism.block.instance.BlockInstanceService;
 import me.adamix.mekanism.network.NetworkService;
 import me.adamix.mekanism.type.WorldPos;
-import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;

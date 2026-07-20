@@ -2,7 +2,6 @@ package me.adamix.mekanism.block.handler;
 
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.CustomModelData;
-import me.adamix.mekanism.block.BlockFacade;
 import me.adamix.mekanism.block.BlockInstance;
 import me.adamix.mekanism.block.MekanismBlockType;
 import me.adamix.mekanism.block.component.network.EnergyComponent;
@@ -20,7 +19,6 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class EnergyCubeHandler implements BlockHandler {

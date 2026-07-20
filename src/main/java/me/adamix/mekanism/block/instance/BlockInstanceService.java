@@ -6,7 +6,6 @@ import me.adamix.mekanism.block.MekanismBlockType;
 import me.adamix.mekanism.block.registry.BlockRegistry;
 import me.adamix.mekanism.network.NetworkContext;
 import me.adamix.mekanism.type.WorldPos;
-import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.jetbrains.annotations.NotNull;
