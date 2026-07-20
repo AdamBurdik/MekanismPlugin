@@ -12,6 +12,7 @@ import me.adamix.mekanism.block.handler.UniversalCableHandler;
 import me.adamix.mekanism.energy.EnergyStorage;
 import me.adamix.mekanism.menu.MenuDefinition;
 import me.adamix.mekanism.menu.widget.IndicatorWidget;
+import me.adamix.mekanism.menu.widget.MultiSlotIndicatorWidget;
 import me.adamix.mekanism.network.NetworkType;
 import me.adamix.mekanism.network.port.PortType;
 import net.kyori.adventure.key.Key;
@@ -57,7 +58,7 @@ public class BlockRegistry {
         register(MekanismBlockType.BASIC_UNIVERSAL_CABLE, new BlockDefinition(
                 Material.CONDUIT,
                 conduitBlockData,
-                "basic_universal_cable",
+                "universal_cable/basic",
                 cableTransformation,
                 List.of(
                         block -> new TransporterComponent(NetworkType.ENERGY)
@@ -113,7 +114,7 @@ public class BlockRegistry {
         register(MekanismBlockType.BASIC_ENERGY_CUBE, new BlockDefinition(
                 Material.BARRIER,
                 null,
-                "basic_energy_cube",
+                "energy_cube/basic",
                 cableTransformation,
                 List.of(
                         block -> new EnergyComponent(
@@ -121,7 +122,7 @@ public class BlockRegistry {
                                 new EnergyStorage(1000, 100, 100, 0)
                         )
                 ),
-        new EnergyCubeHandler(),
+                new EnergyCubeHandler(),
                 new MenuDefinition(
                         "<font:mekanism:spaces>\uFF08</font><font:mekanism:menu_titles>\uFF00</font>",
                         4,
@@ -143,6 +144,24 @@ public class BlockRegistry {
                 )
         ));
 
+        List<ItemStack> verticalIndicatorFrames = new ArrayList<>();
+
+        for (int i = 0; i < 49; i++) {
+            ItemStack item = ItemStack.of(Material.PAPER);
+            item.editMeta(meta -> {
+                meta.customName(
+                        Component.text("Indicator")
+                );
+            });
+            CustomModelData customModelData = CustomModelData.customModelData()
+                    .addString(Integer.toString(i))
+                    .build();
+            item.setData(DataComponentTypes.CUSTOM_MODEL_DATA, customModelData);
+            item.setData(DataComponentTypes.ITEM_MODEL, Key.key("mekanism", "vertical_energy_indicator"));
+
+            verticalIndicatorFrames.add(item);
+        }
+
         register(MekanismBlockType.SOLAR_GENERATOR, new BlockDefinition(
                 Material.BARRIER,
                 null,
@@ -162,7 +181,26 @@ public class BlockRegistry {
                         )
                 ),
                 new SolarGeneratorHandler(),
-                null
+                new MenuDefinition(
+                        "<font:mekanism:spaces>\uFF08</font><font:mekanism:menu_titles>\uFF01</font>",
+                        4,
+                        List.of(
+                                new MultiSlotIndicatorWidget(
+                                        List.of(8, 17, 26),
+                                        26,
+                                        2,
+                                        instance -> {
+                                            EnergyComponent component = instance.get(EnergyComponent.class).orElseThrow();
+                                            return 1.0 * component.getEnergy() / component.getCapacity();
+                                        },
+                                        instance -> {
+                                            EnergyComponent component = instance.get(EnergyComponent.class).orElseThrow();
+                                            return "%d FE".formatted(component.getEnergy());
+                                        },
+                                        verticalIndicatorFrames
+                                )
+                        )
+                )
         ));
     }
 

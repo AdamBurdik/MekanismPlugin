@@ -4,12 +4,14 @@ import me.adamix.mekanism.block.BlockInstance;
 import me.adamix.mekanism.menu.widget.ButtonWidget;
 import me.adamix.mekanism.menu.widget.IndicatorWidget;
 import me.adamix.mekanism.menu.widget.ItemSlotWidget;
+import me.adamix.mekanism.menu.widget.MultiSlotIndicatorWidget;
 import me.adamix.mekanism.menu.widget.WidgetDefinition;
 import me.adamix.mekanism.type.WorldPos;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
@@ -61,10 +63,43 @@ public class MenuService {
     ) {
         switch (widget) {
             case IndicatorWidget indicator -> renderIndicator(inventory, indicator, instance);
-            case ButtonWidget buttonWidget -> {
+            case MultiSlotIndicatorWidget indicator -> renderMultiSlotIndicator(inventory, indicator, instance);
+            case ButtonWidget buttonWidget -> {}
+            case ItemSlotWidget itemSlotWidget -> {}
+        }
+    }
+
+    private void renderMultiSlotIndicator(
+            @NotNull Inventory inventory,
+            @NotNull MultiSlotIndicatorWidget widget,
+            @NotNull BlockInstance instance
+    ) {
+        double value = widget.valueProvider().apply(instance); // 0.0 - 1.0
+
+        int i = 0;
+        for (int slot : widget.slots()) {
+            ItemStack item;
+            if (slot == widget.sourceSlot()) {
+                var frames = widget.frames();
+
+                int frameIndex = (int) Math.round(value * (frames.size() - 1));
+
+                item = frames.get(frameIndex);
+            } else {
+                item = ItemStack.of(Material.PAPER);
             }
-            case ItemSlotWidget itemSlotWidget -> {
+
+            if (widget.labelProvider() != null) {
+                item.editMeta(meta -> {
+                    meta.customName(
+                            mm.deserialize(widget.labelProvider().apply(instance))
+                    );
+                });
             }
+
+            inventory.setItem(slot, item);
+
+            i++;
         }
     }
 
@@ -74,15 +109,6 @@ public class MenuService {
             @NotNull BlockInstance instance
     ) {
         double value = widget.valueProvider().apply(instance); // 0.0 - 1.0
-        //
-        //
-        //    66.6 / 3
-        //
-        //    20
-        //
-        //
-
-
         int totalSlots = widget.slots().size();
         int rows = widget.rowCount();
         int columns = totalSlots / rows;
@@ -159,6 +185,8 @@ public class MenuService {
 
             for (WidgetDefinition widget : context.definition().widgets()) {
                 if (widget instanceof IndicatorWidget indicator) {
+                    render(topInventory, indicator, context.instance());
+                } else if (widget instanceof MultiSlotIndicatorWidget indicator) {
                     render(topInventory, indicator, context.instance());
                 }
             }

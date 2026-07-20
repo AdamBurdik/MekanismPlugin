@@ -51,12 +51,12 @@ public final class Mekanism extends JavaPlugin {
                     menuService.tickOpenMenus();
                 },
                 0L,
-                20
+                8
         );
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             commands.registrar().register("debug", new DebugCommand(networkService, blockInstanceService));
-            commands.registrar().register("mgive", new GiveCommand());
+            commands.registrar().register("mgive", new GiveCommand(blockRegistry));
             commands.registrar().register("mtest", new TestCommand(this, blockRegistry, menuService));
         });
     }

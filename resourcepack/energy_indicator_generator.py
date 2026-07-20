@@ -3,11 +3,11 @@ import os
 import copy
 import json
 
-path = "./mekanism/assets/mekanism/textures/gui/energy_cube_template.png"
-output = "./mekanism/assets/mekanism/textures/item/energy_indicator"
-items = "./mekanism/assets/mekanism/items"
-models = "./mekanism/assets/mekanism/models/item"
-background_path = "./mekanism/assets/mekanism/textures/item/energy_indicator/background"
+path = "./generated/mekanism/assets/mekanism/textures/gui/energy_cube_template.png"
+output = "./generated/mekanism/assets/mekanism/textures/item/gui/energy_indicator"
+items = "./generated/mekanism/assets/mekanism/items"
+models = "./generated/mekanism/assets/mekanism/models/item"
+background_path = "./generated/mekanism/assets/mekanism/textures/item/gui/energy_indicator/background.png"
 
 os.makedirs(output, exist_ok=True)
 
@@ -47,9 +47,11 @@ schema = {
     }
 }
 
-background_template = Image.open(f"{background_path}/template.png")
+background_template = Image.open(f"{background_path}")
 
 # Generate background textures
+
+os.makedirs(f"{output}/background/", exist_ok=True)
 for level in levels:
     pct = int(level)
     offset = round(pct * slot_size / 100)
@@ -61,7 +63,7 @@ for level in levels:
 
     empty.paste(background_template, (0, slot_size - offset), background_template)
 
-    empty.save(f"{background_path}/{level}.png")
+    empty.save(f"{output}/background/{level}.png")
     
 
 
@@ -100,7 +102,7 @@ for li, level in enumerate(levels):
 
             # Generate model file
             base = copy.deepcopy(item_model_schema)
-            base["textures"]["layer0"] = f"mekanism:item/energy_indicator/{level}/energy_indicator_{i}"
+            base["textures"]["layer0"] = f"mekanism:item/gui/energy_indicator/{level}/energy_indicator_{i}"
 
             with open(f"{models}/energy_indicator/{level}/energy_indicator_{i}.json", "w") as f:
                 json.dump(base, f, indent=4)

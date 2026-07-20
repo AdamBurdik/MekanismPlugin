@@ -1,8 +1,8 @@
 import os
 import zipfile
 
-source = "mekanism"
-output = "mekanism_pack.zip"
+source = "./generated/mekanism"
+output = "./generated/mekanism_pack.zip"
 
 with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as zipf:
     for root, _, files in os.walk(source):

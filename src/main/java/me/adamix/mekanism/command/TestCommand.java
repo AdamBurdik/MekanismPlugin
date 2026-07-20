@@ -21,10 +21,14 @@ import me.adamix.mekanism.type.BlockPos;
 import me.adamix.mekanism.type.WorldPos;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
+import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket;
+import net.minecraft.world.inventory.MenuType;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Transformation;
@@ -51,7 +55,55 @@ public class TestCommand implements BasicCommand {
 
         switch (args[0]) {
             case "energy_indicator" -> testEnergyIndicator(player, args);
+            case "packet" -> testPacket(player);
+            case "inv" -> testInventory(player);
         }
+    }
+
+    private void testPacket(@NotNull Player player) {
+        int id = 10;
+        AtomicInteger counter = new AtomicInteger();
+
+        task = Bukkit.getScheduler().runTaskTimer(
+                plugin,
+                () -> {
+                    if (counter.get() > 5) {
+                        task.cancel();
+                        task = null;
+                    }
+
+                    ClientboundOpenScreenPacket packet = new ClientboundOpenScreenPacket(
+                            id,
+                            MenuType.GENERIC_9x3,
+                            net.minecraft.network.chat.Component.literal("Hello, World  " + counter.getAndIncrement())
+                    );
+
+                    ((CraftPlayer) player)
+                            .getHandle()
+                            .connection.send(packet);
+                },
+                5L,
+                20L
+        );
+    }
+
+    private void testInventory(@NotNull Player player) {
+        AtomicInteger counter = new AtomicInteger();
+
+        task = Bukkit.getScheduler().runTaskTimer(
+                plugin,
+                () -> {
+                    if (counter.get() > 5) {
+                        task.cancel();
+                        task = null;
+                    }
+
+                    Inventory inventory = Bukkit.createInventory(player, 27, Component.text("Hello, World: " + counter.getAndIncrement()));
+                    player.openInventory(inventory);
+                },
+                5L,
+                20L
+        );
     }
 
     private void testEnergyIndicator(@NotNull Player player, String[] args) {

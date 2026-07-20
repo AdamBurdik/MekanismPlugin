@@ -3,3 +3,4 @@ run/
 .idea/
 .gradle/
 resourcepack/deploy.sh
+resourcepack/generated/

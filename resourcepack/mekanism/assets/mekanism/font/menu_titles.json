@@ -6,6 +6,13 @@
 			"height": 93,
 			"chars": ["\uFF00"],
 			"file": "mekanism:gui/energy_cube.png"
+		},
+		{
+			"type": "bitmap",
+			"ascent": 13,
+			"height": 89,
+			"chars": ["\uFF01"],
+			"file": "mekanism:gui/solar_generator.png"
 		}
 	]
 }

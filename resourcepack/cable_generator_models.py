@@ -2,7 +2,7 @@ import json
 import copy
 import os
 
-path = "./mekanism/assets/mekanism/models/block/cable"
+path = "./generated/mekanism/assets/mekanism/models/block/universal_cable"
 
 faces = [
 		{
@@ -84,9 +84,6 @@ schema = {
 	"credit": "Mekanism",
 	"texture_size": [32, 32],
 	"textures": {
-		"0": "mekanism:transporters/cables/basic_universal_cable",
-		"1": "mekanism:transporters/cables/basic_universal_cable_vertical",
-		"particle": "mekanism:transporters/cables/basic_universal_cable"
 	},
 	"elements": [
 		{
@@ -128,6 +125,6 @@ for tier in tiers:
             if bit == "1":
                 output["elements"].append(faces[i])
 
-        with open(f"{path}/{tier}/{tier}_universal_cable_{binary}.json", "w") as f:
+        with open(f"{path}/{tier}/b{binary}.json", "w") as f:
             json.dump(output, f)
 

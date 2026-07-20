@@ -2,7 +2,7 @@ import json
 import copy
 import os
 
-path = "./mekanism/assets/mekanism/models/block/energy_cube"
+path = "./generated/mekanism/assets/mekanism/models/block/energy_cube"
 
 faces = [
     [
@@ -232,7 +232,7 @@ faces = [
 
 schema = {
 	"format_version": "1.21.11",
-	"credit": "Made with Blockbench",
+	"credit": "Mekanism",
 	"textures": {
 		"1": "mekanism:block/energy_cube",
 		"2": "mekanism:block/ports",
@@ -582,5 +582,5 @@ for tier in tiers:
                 for obj in faces[i]:
                     output["elements"].append(obj)
 
-        with open(f"{path}/{tier}/{tier}_energy_cube_{binary}.json", "w") as f:
+        with open(f"{path}/{tier}/b{binary}.json", "w") as f:
             json.dump(output, f)
