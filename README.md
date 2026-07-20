@@ -41,6 +41,12 @@ Early development.
 
 Placement and network connecting is done for universal cables, energy cubes and solar generator.
 
+## Showcase
+
+I plan to add proper showcase in the future, when more features are finished.
+    
+Until then, you can check out small demos in this playlist: https://www.youtube.com/playlist?list=PLUr8_3N5ylq4
+
 # Resource pack
 
 Raw resource pack can be found in [./resourcepack/mekanism](./resourcepack/mekanism)
