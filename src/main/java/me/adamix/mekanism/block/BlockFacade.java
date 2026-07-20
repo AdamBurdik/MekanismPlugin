@@ -13,6 +13,7 @@ import me.adamix.mekanism.network.NetworkService;
 import me.adamix.mekanism.type.WorldPos;
 import me.adamix.utils.BlockUtils;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,6 +28,7 @@ public class BlockFacade {
 
     public void placeBlock(
             @NotNull Block block,
+            @NotNull BlockFace facing,
             @NotNull MekanismBlockType type
     ) {
         WorldPos pos = WorldPos.of(block);
@@ -40,6 +42,7 @@ public class BlockFacade {
         // 3. Create block instance
         BlockInstance instance = blockInstanceService.create(
                 block,
+                facing,
                 type,
                 networkContext
         );
@@ -57,7 +60,8 @@ public class BlockFacade {
         blockService.spawnEntity(
                 block,
                 type,
-                networkContext
+                networkContext,
+                instance
         );
 
         // 6. Register block to network
@@ -68,6 +72,10 @@ public class BlockFacade {
         );
 
         // 7. Update surrounding blocks
+        updateSurroundings(block);
+    }
+
+    public void updateSurroundings(@NotNull Block block) {
         for (Block surrounding : BlockUtils.getSurroundingBlocks(block)) {
             updateBlock(surrounding);
         }
@@ -79,12 +87,16 @@ public class BlockFacade {
         if (!blockService.isMekanismBlock(block)) {
             return;
         }
+        var instance = blockInstanceService.get(WorldPos.of(block));
+        if (instance.isEmpty()) return;
 
         NetworkContext networkContext = networkService.scanSurroundings(location);
 
+
         blockService.updateBlock(
                 block,
-                networkContext
+                networkContext,
+                instance.get()
         );
 
 //        networkService.updateBlock(block);
@@ -108,12 +120,11 @@ public class BlockFacade {
             return;
         }
 
-        var instance = blockInstanceService.get(block.getLocation())
+        var instance = blockInstanceService.get(WorldPos.of(block))
                 .orElseThrow();
 
         menuService.open(
                 player,
-                WorldPos.of(block),
                 definition.menu(),
                 instance
         );

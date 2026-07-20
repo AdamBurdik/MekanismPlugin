@@ -31,7 +31,7 @@ public class BlockListener implements Listener {
             return;
         }
 
-        blockFacade.placeBlock(event.getBlockPlaced(), type);
+        blockFacade.placeBlock(event.getBlockPlaced(), event.getPlayer().getFacing().getOppositeFace(),type);
     }
 
     @EventHandler

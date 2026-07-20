@@ -1,6 +1,10 @@
 package me.adamix.mekanism.block;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import me.adamix.mekanism.block.component.Component;
+import me.adamix.mekanism.type.WorldPos;
+import org.bukkit.block.BlockFace;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.jetbrains.annotations.NotNull;
 
@@ -8,8 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@RequiredArgsConstructor
 public class BlockInstance {
+    @Getter
+    private final WorldPos pos;
     private final List<Component> components = new ArrayList<>();
+    @Getter
+    private final BlockFace facing;
 
     public <T extends Component> void add(@NotNull T component) {
         components.add(component);

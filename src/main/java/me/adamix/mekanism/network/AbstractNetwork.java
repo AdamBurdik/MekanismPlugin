@@ -27,6 +27,10 @@ public abstract class AbstractNetwork {
 
     public abstract @NotNull NetworkType type();
 
+    public boolean isEmpty() {
+        return consumers.isEmpty() && producers.isEmpty();
+    }
+
     public void tick() {
 
     }
@@ -43,10 +47,22 @@ public abstract class AbstractNetwork {
         consumers.add(consumer);
     }
 
+    public void removeConsumer(
+            @NotNull NetworkPort consumer
+    ) {
+        consumers.remove(consumer);
+    }
+
     public void addProducer(
             @NotNull NetworkPort producer
     ) {
         producers.add(producer);
+    }
+
+    public void removeProducer(
+            @NotNull NetworkPort producer
+    ) {
+        producers.remove(producer);
     }
 
     public void removeTransporter(@NotNull Block block) {

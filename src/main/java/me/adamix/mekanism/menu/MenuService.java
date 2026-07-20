@@ -1,35 +1,53 @@
 package me.adamix.mekanism.menu;
 
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.TooltipDisplay;
 import me.adamix.mekanism.block.BlockInstance;
+import me.adamix.mekanism.menu.widget.ButtonIndicatorWidget;
 import me.adamix.mekanism.menu.widget.ButtonWidget;
 import me.adamix.mekanism.menu.widget.IndicatorWidget;
 import me.adamix.mekanism.menu.widget.ItemSlotWidget;
 import me.adamix.mekanism.menu.widget.MultiSlotIndicatorWidget;
+import me.adamix.mekanism.menu.widget.SubMenuWidget;
 import me.adamix.mekanism.menu.widget.WidgetDefinition;
 import me.adamix.mekanism.type.WorldPos;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
 import java.util.UUID;
 
 public class MenuService {
     private final MiniMessage mm = MiniMessage.miniMessage();
     private final Map<UUID, OpenMenuContext> openMenus = new HashMap<>();
+    private static final ItemStack emptyIcon = ItemStack.of(Material.PAPER);
+
+    {
+        emptyIcon.editMeta(meta -> meta.setHideTooltip(true));
+        emptyIcon.setData(DataComponentTypes.ITEM_MODEL, Key.key("mekanism", "empty_icon"));
+        emptyIcon.setData(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplay.tooltipDisplay()
+                .hideTooltip(true)
+                .build());
+    }
 
     public void open(
             @NotNull Player player,
-            @NotNull WorldPos pos,
             @NotNull MenuDefinition definition,
             @NotNull BlockInstance instance
     ) {
@@ -38,11 +56,108 @@ public class MenuService {
                         .color(TextColor.color(0xFFFFFF))
         );
 
+        Set<Integer> occupiedSlots = new HashSet<>();
+
         for (WidgetDefinition widget : definition.widgets()) {
-            render(inv, widget, instance);
+            render(inv, widget, instance, occupiedSlots);
         }
 
-        openMenus.put(player.getUniqueId(), new OpenMenuContext(pos, definition, instance, inv));
+        for (int i = 0; i < inv.getSize(); i++) {
+            if (!occupiedSlots.contains(i)) {
+                inv.setItem(i, emptyIcon);
+            }
+        }
+
+        Stack<MenuDefinition> stack = new Stack<>();
+        stack.push(definition);
+
+        openMenus.put(
+                player.getUniqueId(),
+                new OpenMenuContext(
+                        definition,
+                        instance,
+                        inv,
+                        stack
+                )
+        );
+        player.openInventory(inv);
+    }
+
+    public void openSubmenu(
+            @NotNull Player player,
+            @NotNull OpenMenuContext ctx,
+            @NotNull MenuDefinition submenu
+    ) {
+        Inventory inv = Bukkit.createInventory(null, submenu.rows() * 9,
+                mm.deserialize(submenu.title())
+                        .color(TextColor.color(0xFFFFFF))
+        );
+
+        Set<Integer> occupiedSlots = new HashSet<>();
+
+        for (WidgetDefinition widget : submenu.widgets()) {
+            render(inv, widget, ctx.instance(), occupiedSlots);
+        }
+
+        for (int i = 0; i < inv.getSize(); i++) {
+            if (!occupiedSlots.contains(i)) {
+                inv.setItem(i, emptyIcon);
+            }
+        }
+
+        ctx.stack().push(submenu);
+
+        openMenus.put(
+                player.getUniqueId(),
+                new OpenMenuContext(
+                        submenu,
+                        ctx.instance(),
+                        inv,
+                        ctx.stack()
+                )
+        );
+
+        player.openInventory(inv);
+    }
+
+    public void closeSubmenu(@NotNull Player player) {
+        OpenMenuContext ctx = openMenus.get(player.getUniqueId());
+        if (ctx == null) return;
+
+        ctx.stack().pop();
+        if (ctx.stack().isEmpty()) {
+            openMenus.remove(player.getUniqueId());
+        }
+
+        MenuDefinition newMenu = ctx.stack().lastElement();
+
+        Inventory inv = Bukkit.createInventory(null, newMenu.rows() * 9,
+                mm.deserialize(newMenu.title())
+                        .color(TextColor.color(0xFFFFFF))
+        );
+
+        Set<Integer> occupiedSlots = new HashSet<>();
+
+        for (WidgetDefinition widget : newMenu.widgets()) {
+            render(inv, widget, ctx.instance(), occupiedSlots);
+        }
+
+        for (int i = 0; i < inv.getSize(); i++) {
+            if (!occupiedSlots.contains(i)) {
+                inv.setItem(i, emptyIcon);
+            }
+        }
+
+        openMenus.put(
+                player.getUniqueId(),
+                new OpenMenuContext(
+                        newMenu,
+                        ctx.instance(),
+                        inv,
+                        ctx.stack()
+                )
+        );
+
         player.openInventory(inv);
     }
 
@@ -51,21 +166,61 @@ public class MenuService {
 
         var ctx = openMenus.get(player.getUniqueId());
 
+        Set<Integer> occupiedSlots = new HashSet<>();
+
         for (WidgetDefinition widget : ctx.definition().widgets()) {
-            render(inventory, widget, ctx.instance());
+            render(inventory, widget, ctx.instance(), occupiedSlots);
+        }
+
+        for (int i = 0; i < inventory.getSize(); i++) {
+            if (!occupiedSlots.contains(i)) {
+                inventory.setItem(i, emptyIcon);
+            }
         }
     }
 
     private void render(
             @NotNull Inventory inventory,
             @NotNull WidgetDefinition widget,
-            @NotNull BlockInstance instance
+            @NotNull BlockInstance instance,
+            Set<Integer> occupiedSlots
     ) {
         switch (widget) {
-            case IndicatorWidget indicator -> renderIndicator(inventory, indicator, instance);
-            case MultiSlotIndicatorWidget indicator -> renderMultiSlotIndicator(inventory, indicator, instance);
-            case ButtonWidget buttonWidget -> {}
-            case ItemSlotWidget itemSlotWidget -> {}
+            case IndicatorWidget indicator -> {
+                renderIndicator(inventory, indicator, instance);
+                occupiedSlots.addAll(indicator.slots());
+            }
+            case MultiSlotIndicatorWidget indicator -> {
+                renderMultiSlotIndicator(inventory, indicator, instance);
+                occupiedSlots.addAll(indicator.slots());
+            }
+            case ButtonWidget button -> {
+                inventory.setItem(button.slot(), button.icon());
+                occupiedSlots.add(button.slot());
+            }
+            case ItemSlotWidget item -> {
+                var itemStack = item.slotAccessor().get();
+                if (itemStack == null) itemStack = ItemStack.of(Material.AIR);
+                inventory.setItem(item.slot(), itemStack);
+                occupiedSlots.add(item.slot());
+            }
+            case SubMenuWidget submenu -> {
+                inventory.setItem(submenu.slot(), submenu.icon());
+                occupiedSlots.add(submenu.slot());
+            }
+            case ButtonIndicatorWidget button -> {
+                ItemStack item = button.iconProvider().apply(instance);
+                if (button.labelProvider() != null) {
+                    item.editMeta(meta -> {
+                        meta.customName(
+                                mm.deserialize(button.labelProvider().apply(instance))
+                        );
+                    });
+                }
+
+                inventory.setItem(button.slot(), item);
+                occupiedSlots.add(button.slot());
+            }
         }
     }
 
@@ -144,21 +299,6 @@ public class MenuService {
                 inventory.setItem(widget.slots().get(i), item);
             }
         }
-//
-//        double filledSlotsExact = value * totalSlots; // kolik slotů "celkem" má být vyplněných
-//
-//        for (int i = 0; i < totalSlots; i++) {
-//
-//
-//
-//
-//            double fillRatio = Math.clamp(filledSlotsExact - i, 0.0, 1.0);
-//
-//            List<ItemStack> frames = widget.frames().get(i);
-//            int frameIndex = (int) Math.round(fillRatio * (frames.size() - 1));
-//
-//            inventory.setItem(widget.slots().get(i), frames.get(frameIndex));
-//        }
     }
 
 
@@ -185,11 +325,74 @@ public class MenuService {
 
             for (WidgetDefinition widget : context.definition().widgets()) {
                 if (widget instanceof IndicatorWidget indicator) {
-                    render(topInventory, indicator, context.instance());
+                    render(topInventory, indicator, context.instance(), new HashSet<>());
                 } else if (widget instanceof MultiSlotIndicatorWidget indicator) {
-                    render(topInventory, indicator, context.instance());
+                    render(topInventory, indicator, context.instance(), new HashSet<>());
                 }
             }
         }
+    }
+
+    public void onItemClick(@NotNull InventoryClickEvent event) {
+        Player player = (Player) event.getWhoClicked();
+        int slot = event.getRawSlot();
+
+        OpenMenuContext ctx = openMenus.get(player.getUniqueId());
+        if (ctx == null) return;
+
+        WidgetDefinition widget = findWidgetAt(slot, ctx.definition());
+        if (widget == null) {
+            event.setCancelled(true);
+            return;
+        }
+
+        switch (widget) {
+            case ButtonWidget button -> {
+                event.setCancelled(true);
+                button.onClick().accept(player);
+            }
+            case IndicatorWidget indicator -> event.setCancelled(true);
+            case MultiSlotIndicatorWidget indicator -> event.setCancelled(true);
+            case SubMenuWidget submenu -> {
+                event.setCancelled(true);
+                openSubmenu(player, ctx, submenu.subMenu());
+            }
+            case ItemSlotWidget item -> {
+            }
+            case ButtonIndicatorWidget button -> {
+                event.setCancelled(true);
+                button.onClick().accept(player, ctx.instance());
+            }
+        }
+    }
+
+    private @Nullable WidgetDefinition findWidgetAt(int slot, @NotNull MenuDefinition menu) {
+        for (WidgetDefinition widget : menu.widgets()) {
+            switch (widget) {
+                case ButtonWidget button -> {
+                    if (button.slot() == slot) return button;
+                }
+                case IndicatorWidget indicator -> {
+                    for (int possibleSlot : indicator.slots()) {
+                        if (possibleSlot == slot) return indicator;
+                    }
+                }
+                case ItemSlotWidget item -> {
+                    if (item.slot() == slot) return item;
+                }
+                case MultiSlotIndicatorWidget indicator -> {
+                    for (int possibleSlot : indicator.slots()) {
+                        if (possibleSlot == slot) return indicator;
+                    }
+                }
+                case SubMenuWidget submenu -> {
+                    if (submenu.slot() == slot) return submenu;
+                }
+                case ButtonIndicatorWidget button -> {
+                    if (button.slot() == slot) return button;
+                }
+            }
+        }
+        return null;
     }
 }

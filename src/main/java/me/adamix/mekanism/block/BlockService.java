@@ -5,7 +5,6 @@ import me.adamix.mekanism.block.registry.BlockDefinition;
 import me.adamix.mekanism.block.registry.BlockRegistry;
 import me.adamix.mekanism.network.NetworkContext;
 import me.adamix.mekanism.type.WorldPos;
-import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.ItemDisplay;
 import org.jetbrains.annotations.NotNull;
@@ -44,15 +43,17 @@ public class BlockService {
     public void spawnEntity(
             @NotNull Block block,
             @NotNull MekanismBlockType type,
-            @NotNull NetworkContext networkContext
-            ) {
+            @NotNull NetworkContext networkContext,
+            @NotNull BlockInstance instance
+    ) {
         BlockDefinition definition = blockRegistry.getOrThrow(type);
 
         var entity = definition.handler().spawnEntity(
                 block,
                 type,
                 definition,
-                networkContext
+                networkContext,
+                instance
         );
         locationToEntity.put(WorldPos.of(block), entity);
     }
@@ -67,7 +68,8 @@ public class BlockService {
 
     public void updateBlock(
             @NotNull Block block,
-            @NotNull NetworkContext networkContext
+            @NotNull NetworkContext networkContext,
+            @NotNull BlockInstance instance
     ) {
         WorldPos location = WorldPos.of(block);
 
@@ -86,7 +88,8 @@ public class BlockService {
                 type,
                 itemDisplay,
                 reg,
-                networkContext
+                networkContext,
+                instance
         );
     }
 }

@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.function.Consumer;
 
 public record ButtonWidget(
-        int slotIndex,
+        int slot,
         @NotNull ItemStack icon,
         @NotNull Consumer<Player> onClick
 ) implements WidgetDefinition {}

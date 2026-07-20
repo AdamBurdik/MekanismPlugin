@@ -1,5 +1,6 @@
 package me.adamix.mekanism.menu.widget;
 
 public sealed interface WidgetDefinition permits
-        ItemSlotWidget, ButtonWidget, IndicatorWidget, MultiSlotIndicatorWidget {
+        ButtonIndicatorWidget, ButtonWidget, IndicatorWidget,
+        ItemSlotWidget, MultiSlotIndicatorWidget, SubMenuWidget {
 }

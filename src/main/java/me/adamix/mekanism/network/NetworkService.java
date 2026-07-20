@@ -11,7 +11,6 @@ import me.adamix.mekanism.type.BlockPos;
 import me.adamix.mekanism.type.Tuple;
 import me.adamix.mekanism.type.WorldPos;
 import me.adamix.utils.BlockUtils;
-import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.jetbrains.annotations.NotNull;
@@ -181,19 +180,52 @@ public class NetworkService {
             var component = instance.get(EnergyComponent.class)
                     .orElseThrow();
 
-            registerPorts(block, type, NetworkType.ENERGY, instance, component.getPorts());
+            registerPorts(WorldPos.of(block), NetworkType.ENERGY, instance, component.getPorts());
         }
     }
 
-    private void registerPorts(
+    public void unregisterBlock(
             @NotNull Block block,
             @NotNull MekanismBlockType type,
+            @NotNull BlockInstance instance
+    ) {
+        todo();
+    }
+
+    public void unregisterPort(
+            @NotNull WorldPos pos,
+            @NotNull BlockFace face
+    ) {
+        NetworkPort port = portsOf.get(pos).get(face);
+        if (port == null) return;
+
+        UUID networkId = port.getNetworkId();
+
+        AbstractNetwork network = networksById.get(networkId);
+        if (network == null) {
+            // TODO Handle somehow idk
+            return;
+        }
+
+        if (port.getPortType() == PortType.INPUT) {
+            network.removeConsumer(port);
+        } else if (port.getPortType() == PortType.OUTPUT) {
+            network.removeProducer(port);
+        }
+
+        if (network.isEmpty()) {
+            networksById.remove(networkId);
+        }
+
+        portsOf.get(pos).remove(face);
+    }
+
+    public void registerPorts(
+            @NotNull WorldPos pos,
             @NotNull NetworkType networkType,
             @NotNull BlockInstance instance,
             @NotNull Map<BlockFace, PortType> ports
     ) {
-        WorldPos pos = WorldPos.of(block);
-
         NetworkContext networkContext = scanSurroundings(pos);
         Map<BlockFace, AbstractNetwork> map = networkContext.networkMap();
 
@@ -207,7 +239,7 @@ public class NetworkService {
 
             var port = new NetworkPort(
                     pos.block(),
-                    block.getWorld().getName(),
+                    pos.worldName(),
                     face,
                     portType,
                     instance,
@@ -227,11 +259,11 @@ public class NetworkService {
             if (connectedFaces.contains(face)) return;
             if (portType == PortType.DISABLED) return;
 
-            AbstractNetwork network = createNetwork(networkType, block.getWorld().getName());
+            AbstractNetwork network = createNetwork(networkType, pos.worldName());
 
             var port = new NetworkPort(
                     pos.block(),
-                    block.getWorld().getName(),
+                    pos.worldName(),
                     face,
                     portType,
                     instance,

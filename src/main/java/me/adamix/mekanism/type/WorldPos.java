@@ -17,6 +17,11 @@ public record WorldPos(@NotNull String worldName, @NotNull BlockPos block) {
         );
     }
 
+    public Block resolveBlock() {
+        World world = resolveWorld();
+        return world.getBlockAt(block.x(), block.y(), block.z());
+    }
+
     public @NotNull World resolveWorld() {
         World world = Bukkit.getWorld(worldName);
         if (world == null) throw new IllegalStateException("Cant find world: " + worldName);

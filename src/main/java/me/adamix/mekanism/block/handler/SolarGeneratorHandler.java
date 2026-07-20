@@ -5,10 +5,12 @@ import me.adamix.mekanism.block.BlockInstance;
 import me.adamix.mekanism.block.MekanismBlockType;
 import me.adamix.mekanism.block.registry.BlockDefinition;
 import me.adamix.mekanism.network.NetworkContext;
+import me.adamix.mekanism.type.WorldPos;
 import net.kyori.adventure.key.Key;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -17,11 +19,12 @@ public class SolarGeneratorHandler implements BlockHandler {
     @Override
     public @NotNull BlockInstance createBlockInstance(
             @NotNull Block block,
+            @NotNull BlockFace facing,
             @NotNull MekanismBlockType type,
             @NotNull NetworkContext networkContext,
             @NotNull BlockDefinition definition
     ) {
-        var instance = new BlockInstance();
+        var instance = new BlockInstance(WorldPos.of(block), facing);
 
         definition.components().forEach(factory -> {
             instance.add(factory.create(block));
@@ -57,7 +60,8 @@ public class SolarGeneratorHandler implements BlockHandler {
             @NotNull Block block,
             @NotNull MekanismBlockType type,
             @NotNull BlockDefinition definition,
-            @NotNull NetworkContext networkContext
+            @NotNull NetworkContext networkContext,
+            @NotNull BlockInstance instance
     ) {
         Location location = block.getLocation();
         Location offsetLoc = location.clone()
@@ -77,7 +81,8 @@ public class SolarGeneratorHandler implements BlockHandler {
             @NotNull MekanismBlockType type,
             @NotNull ItemDisplay entity,
             @NotNull BlockDefinition definition,
-            @NotNull NetworkContext networkContext
+            @NotNull NetworkContext networkContext,
+            @NotNull BlockInstance instance
     ) {
 
     }

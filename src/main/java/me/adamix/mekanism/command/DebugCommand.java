@@ -58,9 +58,7 @@ public class DebugCommand implements BasicCommand {
             return;
         }
 
-        Location location = block.getLocation();
-
-        var opt = blockInstanceService.get(location);
+        var opt = blockInstanceService.get(WorldPos.of(block));
         if (opt.isEmpty()) {
             player.sendMessage("No instance found");
             return;

@@ -5,6 +5,7 @@ import me.adamix.mekanism.energy.EnergyStorage;
 import me.adamix.mekanism.network.port.NetworkPort;
 import me.adamix.mekanism.network.port.PortType;
 import me.adamix.mekanism.type.BlockPos;
+import me.adamix.mekanism.type.WorldPos;
 import org.bukkit.block.BlockFace;
 import org.junit.Test;
 
@@ -112,7 +113,7 @@ public class EnergyNetworkTest {
     }
 
     private NetworkPort createConsumerPort(EnergyComponent component) {
-        BlockInstanceStub stub = new BlockInstanceStub(component);
+        BlockInstanceStub stub = new BlockInstanceStub(component, new WorldPos("world", new BlockPos(0, 0, 0)), BlockFace.NORTH);
         return new NetworkPort(new BlockPos(0, 0, 0), "world", BlockFace.NORTH, PortType.INPUT, stub, UUID.randomUUID());
     }
 }

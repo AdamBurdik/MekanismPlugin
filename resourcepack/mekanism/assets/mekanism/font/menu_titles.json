@@ -13,6 +13,13 @@
 			"height": 89,
 			"chars": ["\uFF01"],
 			"file": "mekanism:gui/solar_generator.png"
+		},
+		{
+			"type": "bitmap",
+			"ascent": 13,
+			"height": 89,
+			"chars": ["\uFF02"],
+			"file": "mekanism:gui/slots_config.png"
 		}
 	]
 }

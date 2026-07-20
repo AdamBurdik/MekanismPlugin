@@ -3,6 +3,9 @@ package me.adamix.mekanism.block;
 import me.adamix.mekanism.block.component.Component;
 import me.adamix.mekanism.block.component.network.TransporterComponent;
 import me.adamix.mekanism.network.NetworkType;
+import me.adamix.mekanism.type.BlockPos;
+import me.adamix.mekanism.type.WorldPos;
+import org.bukkit.block.BlockFace;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.junit.Test;
 
@@ -14,7 +17,7 @@ public class BlockInstanceTest {
 
     @Test
     public void addAndRetrieveComponent() {
-        BlockInstance instance = new BlockInstance();
+        BlockInstance instance = new BlockInstance(new WorldPos("world", new BlockPos(0, 0, 0)), BlockFace.NORTH);
         TransporterComponent component = new TransporterComponent(NetworkType.ENERGY);
         instance.add(component);
 
@@ -25,26 +28,26 @@ public class BlockInstanceTest {
 
     @Test
     public void hasReturnsTrueWhenComponentPresent() {
-        BlockInstance instance = new BlockInstance();
+        BlockInstance instance = new BlockInstance(new WorldPos("world", new BlockPos(0, 0, 0)), BlockFace.NORTH);
         instance.add(new TransporterComponent(NetworkType.ENERGY));
         assertTrue(instance.has(TransporterComponent.class));
     }
 
     @Test
     public void hasReturnsFalseWhenComponentAbsent() {
-        BlockInstance instance = new BlockInstance();
+        BlockInstance instance = new BlockInstance(new WorldPos("world", new BlockPos(0, 0, 0)), BlockFace.NORTH);
         assertFalse(instance.has(TransporterComponent.class));
     }
 
     @Test
     public void getReturnsEmptyWhenComponentAbsent() {
-        BlockInstance instance = new BlockInstance();
+        BlockInstance instance = new BlockInstance(new WorldPos("world", new BlockPos(0, 0, 0)), BlockFace.NORTH);
         assertTrue(instance.get(TransporterComponent.class).isEmpty());
     }
 
     @Test
     public void getReturnsCorrectTypeAmongMultipleComponents() {
-        BlockInstance instance = new BlockInstance();
+        BlockInstance instance = new BlockInstance(new WorldPos("world", new BlockPos(0, 0, 0)), BlockFace.NORTH);
         DummyComponentA a = new DummyComponentA();
         DummyComponentB b = new DummyComponentB();
         instance.add(a);
@@ -56,7 +59,7 @@ public class BlockInstanceTest {
 
     @Test
     public void componentsReturnsAllAddedComponents() {
-        BlockInstance instance = new BlockInstance();
+        BlockInstance instance = new BlockInstance(new WorldPos("world", new BlockPos(0, 0, 0)), BlockFace.NORTH);
         TransporterComponent c = new TransporterComponent(NetworkType.ENERGY);
         instance.add(c);
         assertEquals(1, instance.components().size());

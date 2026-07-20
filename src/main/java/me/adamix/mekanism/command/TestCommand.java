@@ -196,14 +196,15 @@ public class TestCommand implements BasicCommand {
                 menu
         ));
 
+
+        var worldPos = new WorldPos(
+                player.getLocation().getWorld().getName(),
+                new BlockPos(0, 0, 0)
+        );
         menuService.open(
                 player,
-                new WorldPos(
-                        player.getLocation().getWorld().getName(),
-                        new BlockPos(0, 0, 0)
-                ),
                 menu,
-                new BlockInstance()
+                new BlockInstance(worldPos, BlockFace.NORTH)
         );
 
         AtomicInteger i = new AtomicInteger();

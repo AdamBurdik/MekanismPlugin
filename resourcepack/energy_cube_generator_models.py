@@ -155,6 +155,43 @@ faces = [
     ],
     [
         {
+        	"name": "port_bg_down",
+        	"from": [5, 1, 3],
+        	"to": [11, 2, 13],
+        	"rotation": {"angle": 0, "axis": "y", "origin": [4, 1, 4]},
+        	"faces": {
+        		"east": {"uv": [0, 0, 10, 1], "rotation": 90, "texture": "#1"},
+        		"west": {"uv": [0, 0, 10, 1], "rotation": 90, "texture": "#1"},
+        		"up": {"uv": [0, 0, 10, 6], "rotation": 90, "texture": "#1"},
+        		"down": {"uv": [0, 0, 10, 6], "rotation": 90, "texture": "#1"}
+        	}
+        },
+        {
+        	"name": "port_down",
+        	"from": [4, -4, 8],
+        	"to": [12, 4, 9],
+        	"rotation": {"x": 0, "y": 90, "z": 90, "origin": [8, 0, 8]},
+        	"faces": {
+        		"north": {"uv": [0, 0, 8, 8], "texture": "#2"},
+        		"east": {"uv": [0, 0, 1, 8], "texture": "#2"},
+        		"south": {"uv": [8, 0, 16, 8], "texture": "#2"},
+        		"west": {"uv": [7, 0, 8, 8], "texture": "#2"},
+        		"up": {"uv": [0, 0, 8, 1], "texture": "#2"},
+        		"down": {"uv": [0, 7, 8, 8], "texture": "#2"}
+        	}
+        },
+        {
+        	"name": "port_overlay_down",
+        	"from": [4, -4, 8],
+        	"to": [12, 4, 8],
+        	"rotation": {"x": 0, "y": 90, "z": 90, "origin": [8, 0, 8]},
+        	"faces": {
+        		"north": {"uv": [8, 8, 16, 16], "texture": "#3"}
+        	}
+        },
+    ],
+    [
+        {
         	"name": "port_bg_up",
         	"from": [5, 14, 3],
         	"to": [11, 15, 13],
@@ -190,43 +227,6 @@ faces = [
         	}
         },
 
-    ],
-    [
-        {
-        	"name": "port_bg_down",
-        	"from": [5, 1, 3],
-        	"to": [11, 2, 13],
-        	"rotation": {"angle": 0, "axis": "y", "origin": [4, 1, 4]},
-        	"faces": {
-        		"east": {"uv": [0, 0, 10, 1], "rotation": 90, "texture": "#1"},
-        		"west": {"uv": [0, 0, 10, 1], "rotation": 90, "texture": "#1"},
-        		"up": {"uv": [0, 0, 10, 6], "rotation": 90, "texture": "#1"},
-        		"down": {"uv": [0, 0, 10, 6], "rotation": 90, "texture": "#1"}
-        	}
-        },
-        {
-        	"name": "port_down",
-        	"from": [4, -4, 8],
-        	"to": [12, 4, 9],
-        	"rotation": {"x": 0, "y": 90, "z": 90, "origin": [8, 0, 8]},
-        	"faces": {
-        		"north": {"uv": [0, 0, 8, 8], "texture": "#2"},
-        		"east": {"uv": [0, 0, 1, 8], "texture": "#2"},
-        		"south": {"uv": [8, 0, 16, 8], "texture": "#2"},
-        		"west": {"uv": [7, 0, 8, 8], "texture": "#2"},
-        		"up": {"uv": [0, 0, 8, 1], "texture": "#2"},
-        		"down": {"uv": [0, 7, 8, 8], "texture": "#2"}
-        	}
-        },
-        {
-        	"name": "port_overlay_down",
-        	"from": [4, -4, 8],
-        	"to": [12, 4, 8],
-        	"rotation": {"x": 0, "y": 90, "z": 90, "origin": [8, 0, 8]},
-        	"faces": {
-        		"north": {"uv": [8, 8, 16, 16], "texture": "#3"}
-        	}
-        },
     ]
 ]
 
