@@ -8,9 +8,11 @@ import me.adamix.mekanism.block.BlockInstance;
 import me.adamix.mekanism.block.BlockService;
 import me.adamix.mekanism.block.MekanismBlockType;
 import me.adamix.mekanism.block.component.GeneratorEnergyComponent;
+import me.adamix.mekanism.block.component.InfuserComponent;
 import me.adamix.mekanism.block.component.network.EnergyComponent;
 import me.adamix.mekanism.block.component.network.TransporterComponent;
 import me.adamix.mekanism.block.handler.EnergyCubeHandler;
+import me.adamix.mekanism.block.handler.MetallurgicInfuserHandler;
 import me.adamix.mekanism.block.handler.SolarGeneratorHandler;
 import me.adamix.mekanism.block.handler.UniversalCableHandler;
 import me.adamix.mekanism.block.instance.BlockInstanceService;
@@ -27,6 +29,8 @@ import me.adamix.mekanism.energy.EnergyStorage;
 import me.adamix.mekanism.event.BlockListener;
 import me.adamix.mekanism.event.ChunkListener;
 import me.adamix.mekanism.event.InventoryListener;
+import me.adamix.mekanism.infusion.InfusionStorage;
+import me.adamix.mekanism.infusion.InfusionType;
 import me.adamix.mekanism.item.SlotType;
 import me.adamix.mekanism.menu.MenuDefinition;
 import me.adamix.mekanism.menu.MenuService;
@@ -66,6 +70,7 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
+@SuppressWarnings("UnstableApiUsage")
 public final class Mekanism extends JavaPlugin {
     private NetworkService networkService;
     private BlockFacade blockFacade;
@@ -356,7 +361,8 @@ public final class Mekanism extends JavaPlugin {
                         new ButtonWidget(
                                 8,
                                 ejectIcon,
-                                _ -> {} 
+                                _ -> {
+                                }
                         ),
                         new ButtonIndicatorWidget(
                                 35,
@@ -417,11 +423,6 @@ public final class Mekanism extends JavaPlugin {
 
         for (int i = 0; i < 49; i++) {
             ItemStack item = ItemStack.of(Material.PAPER);
-            item.editMeta(meta -> {
-                meta.customName(
-                        Component.text("Indicator")
-                );
-            });
             CustomModelData customModelData = CustomModelData.customModelData()
                     .addString(Integer.toString(i))
                     .build();
@@ -429,6 +430,21 @@ public final class Mekanism extends JavaPlugin {
             item.setData(DataComponentTypes.ITEM_MODEL, Key.key("mekanism", "vertical_energy_indicator"));
 
             verticalIndicatorFrames.add(item);
+        }
+
+        List<ItemStack> infusionFrames = new ArrayList<>();
+
+        for (InfusionType infusionType : InfusionType.values()) {
+            for (int i = 0; i < 49; i++) {
+                ItemStack item = ItemStack.of(Material.PAPER);
+                CustomModelData customModelData = CustomModelData.customModelData()
+                        .addString(Integer.toString(i))
+                        .build();
+                item.setData(DataComponentTypes.CUSTOM_MODEL_DATA, customModelData);
+                item.setData(DataComponentTypes.ITEM_MODEL, Key.key("mekanism", "infuser_indicator/" + infusionType.name().toLowerCase()));
+
+                infusionFrames.add(item);
+            }
         }
 
         registry.register(MekanismBlockType.SOLAR_GENERATOR, new BlockDefinition(
@@ -457,7 +473,7 @@ public final class Mekanism extends JavaPlugin {
                                 new MultiSlotIndicatorWidget(
                                         List.of(8, 17, 26),
                                         26,
-                                        2,
+                                        3,
                                         instance -> {
                                             EnergyComponent component = instance.get(EnergyComponent.class).orElseThrow();
                                             return 1.0 * component.getEnergy() / component.getCapacity();
@@ -485,6 +501,80 @@ public final class Mekanism extends JavaPlugin {
                                 new ItemSlotWidget(22, dummySlotAccessor),
                                 new ItemSlotWidget(23, dummySlotAccessor),
                                 new ItemSlotWidget(24, dummySlotAccessor)
+                        )
+                )
+        ));
+
+        registry.register(MekanismBlockType.METALLURGIC_INFUSER, new BlockDefinition(
+                Material.BARRIER,
+                null,
+                "mekanism:metallurgic_infuser",
+                fullBlockTransformation,
+                List.of(
+                        block -> new EnergyComponent(
+                                portsSupplier.get(),
+                                new EnergyStorage(
+                                        2500, 100, 100, 0
+                                )
+                        ),
+                        block -> new InfuserComponent(
+                                portsSupplier.get(),
+                                new InfusionStorage(
+                                        null, 0, 0
+                                )
+                        )
+                ),
+                new MetallurgicInfuserHandler(),
+                new MenuDefinition(
+                        "<font:mekanism:spaces>\uFF08</font><font:mekanism:menu_titles>\uFF01</font>",
+                        4,
+                        List.of(
+                                new MultiSlotIndicatorWidget(
+                                        List.of(8, 17, 26),
+                                        26,
+                                        3,
+                                        instance -> {
+                                            EnergyComponent component = instance.get(EnergyComponent.class).orElseThrow();
+                                            return 1.0 * component.getEnergy() / component.getCapacity();
+                                        },
+                                        instance -> {
+                                            EnergyComponent component = instance.get(EnergyComponent.class).orElseThrow();
+                                            return "%d FE".formatted(component.getEnergy());
+                                        },
+                                        verticalIndicatorFrames
+                                ),
+                                new MultiSlotIndicatorWidget(
+                                        List.of(0, 9, 18),
+                                        18,
+                                        3,
+                                        instance -> {
+                                            InfuserComponent component = instance.get(InfuserComponent.class).orElseThrow();
+
+                                            if (component.getType() == null) {
+                                                return 0.0;
+                                            }
+
+                                            double offset = switch (component.getType()) {
+                                                case CARBON -> 0;
+                                                case REDSTONE -> 0.25;
+                                                case DIAMOND -> 0.50;
+                                                case GOLD -> 0.75;
+                                            };
+
+                                            // 0 - 25%    = carbon
+                                            // 25% - 50%  = redstone
+                                            // 50% - 75%  = diamond
+                                            // 75% - 100% = gold
+
+                                            double pct = 0.25 * component.getAmount() / component.getCapacity();
+                                            return offset + pct;
+                                        },
+                                        instance -> {
+                                            EnergyComponent component = instance.get(EnergyComponent.class).orElseThrow();
+                                            return "%d FE".formatted(component.getEnergy());
+                                        },
+                                        infusionFrames
+                                )
                         )
                 )
         ));

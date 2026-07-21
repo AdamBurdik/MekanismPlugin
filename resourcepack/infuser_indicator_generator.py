@@ -6,7 +6,7 @@ import json
 # -- Contants --
 menu_template_path = "./generated/mekanism/assets/mekanism/textures/gui/metallurgic_infuser_template.png"
 inf_path = "./generated/mekanism/assets/mekanism/textures/item/gui/infuser_indicator"
-inf_generated_path = "./generated/mekanism/assets/mekanism/textures/item/infuser_indicator"
+inf_generated_path = "./generated/mekanism/assets/mekanism/textures/item/gui/infuser_indicator"
 inf_model_path = "./generated/mekanism/assets/mekanism/models/item/infuser_indicator"
 items_path = "./generated/mekanism/assets/mekanism/items"
 

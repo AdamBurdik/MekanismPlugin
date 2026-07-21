@@ -7,8 +7,6 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
-import static me.adamix.utils.Utils.todo;
-
 @Getter
 @ToString
 public class EnergyStorage {
@@ -61,16 +59,16 @@ public class EnergyStorage {
     }
 
     public void load(@NotNull PersistentDataContainer pdc) {
-        this.energy = pdc.get(MekanismKeys.ENERGY_COMPONENT_ENERGY, PersistentDataType.LONG).longValue();
-        this.capacity = pdc.get(MekanismKeys.ENERGY_COMPONENT_CAPACITY, PersistentDataType.LONG).longValue();
-        this.maxInsert = pdc.get(MekanismKeys.ENERGY_COMPONENT_MAX_INSERT, PersistentDataType.LONG).longValue();
-        this.maxExtract = pdc.get(MekanismKeys.ENERGY_COMPONENT_MAX_EXTRACT, PersistentDataType.LONG).longValue();
+        this.energy = pdc.get(MekanismKeys.ENERGY_STORAGE_ENERGY, PersistentDataType.LONG).longValue();
+        this.capacity = pdc.get(MekanismKeys.ENERGY_STORAGE_CAPACITY, PersistentDataType.LONG).longValue();
+        this.maxInsert = pdc.get(MekanismKeys.ENERGY_STORAGE_MAX_INSERT, PersistentDataType.LONG).longValue();
+        this.maxExtract = pdc.get(MekanismKeys.ENERGY_STORAGE_MAX_EXTRACT, PersistentDataType.LONG).longValue();
     }
 
     public void save(@NotNull PersistentDataContainer pdc) {
-        pdc.set(MekanismKeys.ENERGY_COMPONENT_ENERGY, PersistentDataType.LONG, energy);
-        pdc.set(MekanismKeys.ENERGY_COMPONENT_CAPACITY, PersistentDataType.LONG, capacity);
-        pdc.set(MekanismKeys.ENERGY_COMPONENT_MAX_INSERT, PersistentDataType.LONG, maxInsert);
-        pdc.set(MekanismKeys.ENERGY_COMPONENT_MAX_EXTRACT, PersistentDataType.LONG, maxExtract);
+        pdc.set(MekanismKeys.ENERGY_STORAGE_ENERGY, PersistentDataType.LONG, energy);
+        pdc.set(MekanismKeys.ENERGY_STORAGE_CAPACITY, PersistentDataType.LONG, capacity);
+        pdc.set(MekanismKeys.ENERGY_STORAGE_MAX_INSERT, PersistentDataType.LONG, maxInsert);
+        pdc.set(MekanismKeys.ENERGY_STORAGE_MAX_EXTRACT, PersistentDataType.LONG, maxExtract);
     }
 }

@@ -20,6 +20,13 @@
 			"height": 89,
 			"chars": ["\uFF02"],
 			"file": "mekanism:gui/slots_config.png"
+		},
+		{
+			"type": "bitmap",
+			"ascent": 13,
+			"height": 89,
+			"chars": ["\uFF03"],
+			"file": "mekanism:gui/metallurgic_infuser.png"
 		}
 	]
 }
