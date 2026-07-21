@@ -3,13 +3,17 @@ package me.adamix.mekanism.network;
 import lombok.Getter;
 import me.adamix.mekanism.block.component.network.EnergyComponent;
 import me.adamix.mekanism.network.port.NetworkPort;
+import me.adamix.mekanism.type.WorldPos;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -24,90 +28,97 @@ public class EnergyNetwork extends AbstractNetwork {
         return NetworkType.ENERGY;
     }
 
-@Override
-public void tick() {
-    List<NetworkPort> producers = this.producers.stream()
-//            .filter(port -> port.getLocation().getChunk().isLoaded())
-            .toList();
-    List<NetworkPort> consumers = this.consumers.stream()
-//            .filter(port -> port.getLocation().getChunk().isLoaded())
-            .toList();
-    if (producers.isEmpty() || consumers.isEmpty()) return;
+    @Override
+    public @Nullable Set<WorldPos> tick() {
+        List<NetworkPort> producers = this.producers.stream()
+                //            .filter(port -> port.getLocation().getChunk().isLoaded())
+                .toList();
+        List<NetworkPort> consumers = this.consumers.stream()
+                //            .filter(port -> port.getLocation().getChunk().isLoaded())
+                .toList();
+        if (producers.isEmpty() || consumers.isEmpty()) return null;
 
-    // 1. Check how much each producer can give
-    Map<EnergyComponent, Long> offered = new HashMap<>();
-    long totalAvailable = 0;
-    for (NetworkPort port : producers) {
-        EnergyComponent component = port.getEnergyComponent().orElseThrow();
-        long available = component.extract(Long.MAX_VALUE, true);
-        offered.put(component, available);
-        totalAvailable += available;
-    }
-    if (totalAvailable == 0) return;
-
-    // 2. Divide between consumers
-    Map<EnergyComponent, Long> distributed = redistributeEnergy(totalAvailable, consumers);
-    long finalTotal = distributed.values().stream().mapToLong(Long::longValue).sum();
-    if (finalTotal == 0) return;
-
-    // 3. Device between producers
-    double ratio = (double) finalTotal / (double) totalAvailable;
-    Map<EnergyComponent, Long> toExtract = new HashMap<>();
-    long allocated = 0;
-    List<EnergyComponent> producerComponents = new ArrayList<>(offered.keySet());
-
-    for (int i = 0; i < producerComponents.size(); i++) {
-        EnergyComponent component = producerComponents.get(i);
-        long amount;
-        if (i == producerComponents.size() - 1) {
-            amount = finalTotal - allocated;
-        } else {
-            amount = Math.round(offered.get(component) * ratio);
+        // 1. Check how much each producer can give
+        Map<EnergyComponent, Long> offered = new HashMap<>();
+        long totalAvailable = 0;
+        for (NetworkPort port : producers) {
+            EnergyComponent component = port.getEnergyComponent().orElseThrow();
+            long available = component.extract(Long.MAX_VALUE, true);
+            offered.put(component, available);
+            totalAvailable += available;
         }
-        toExtract.put(component, amount);
-        allocated += amount;
-    }
+        if (totalAvailable == 0) return null;
 
-    // 4. Actually apply the updates
-    for (var entry : toExtract.entrySet()) {
-        entry.getKey().extract(entry.getValue(), false);
-    }
-    for (var entry : distributed.entrySet()) {
-        entry.getKey().insert(entry.getValue(), false);
-    }
-}
+        // 2. Divide between consumers
+        Map<EnergyComponent, Long> distributed = redistributeEnergy(totalAvailable, consumers);
+        long finalTotal = distributed.values().stream().mapToLong(Long::longValue).sum();
+        if (finalTotal == 0) return null;
 
-Map<EnergyComponent, Long> redistributeEnergy(
-        long totalAvailable,
-        @NotNull List<NetworkPort> consumers
-) {
-    long pool = totalAvailable;
-    List<EnergyComponent> remaining = new ArrayList<>(
-            consumers.stream().map(port -> port.getEnergyComponent().orElseThrow()).toList()
-    );
-    Map<EnergyComponent, Long> result = new HashMap<>();
+        // 3. Device between producers
+        double ratio = (double) finalTotal / (double) totalAvailable;
+        Map<EnergyComponent, Long> toExtract = new HashMap<>();
+        long allocated = 0;
+        List<EnergyComponent> producerComponents = new ArrayList<>(offered.keySet());
 
-    while (pool > 0 && !remaining.isEmpty()) {
-        long share = pool / remaining.size();
-        if (share == 0) break;
-
-        Iterator<EnergyComponent> iterator = remaining.iterator();
-        long distributedThisRound = 0;
-
-        while (iterator.hasNext()) {
-            EnergyComponent component = iterator.next();
-            long inserted = component.insert(share, true);
-            result.merge(component, inserted, Long::sum);
-            distributedThisRound += inserted;
-
-            if (inserted < share) {
-                iterator.remove();
+        for (int i = 0; i < producerComponents.size(); i++) {
+            EnergyComponent component = producerComponents.get(i);
+            long amount;
+            if (i == producerComponents.size() - 1) {
+                amount = finalTotal - allocated;
+            } else {
+                amount = Math.round(offered.get(component) * ratio);
             }
+            toExtract.put(component, amount);
+            allocated += amount;
         }
 
-        pool -= distributedThisRound;
+        // 4. Actually apply the updates
+        for (var entry : toExtract.entrySet()) {
+            entry.getKey().extract(entry.getValue(), false);
+        }
+        for (var entry : distributed.entrySet()) {
+            entry.getKey().insert(entry.getValue(), false);
+        }
+
+        Set<WorldPos> touched = new HashSet<>();
+
+        producers.forEach(p -> touched.add(p.getPos().withWorld(this.worldName)));
+        consumers.forEach(p -> touched.add(p.getPos().withWorld(this.worldName)));
+
+        return touched;
     }
 
-    return result;
-}
+    Map<EnergyComponent, Long> redistributeEnergy(
+            long totalAvailable,
+            @NotNull List<NetworkPort> consumers
+    ) {
+        long pool = totalAvailable;
+        List<EnergyComponent> remaining = new ArrayList<>(
+                consumers.stream().map(port -> port.getEnergyComponent().orElseThrow()).toList()
+        );
+        Map<EnergyComponent, Long> result = new HashMap<>();
+
+        while (pool > 0 && !remaining.isEmpty()) {
+            long share = pool / remaining.size();
+            if (share == 0) break;
+
+            Iterator<EnergyComponent> iterator = remaining.iterator();
+            long distributedThisRound = 0;
+
+            while (iterator.hasNext()) {
+                EnergyComponent component = iterator.next();
+                long inserted = component.insert(share, true);
+                result.merge(component, inserted, Long::sum);
+                distributedThisRound += inserted;
+
+                if (inserted < share) {
+                    iterator.remove();
+                }
+            }
+
+            pool -= distributedThisRound;
+        }
+
+        return result;
+    }
 }

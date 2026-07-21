@@ -4,10 +4,12 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import me.adamix.mekanism.network.port.NetworkPort;
 import me.adamix.mekanism.type.BlockPos;
+import me.adamix.mekanism.type.WorldPos;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -30,8 +32,8 @@ public abstract class AbstractNetwork {
         return consumers.isEmpty() && producers.isEmpty();
     }
 
-    public void tick() {
-
+    public @Nullable Set<WorldPos> tick() {
+        return null;
     }
 
     public void addTransporter(

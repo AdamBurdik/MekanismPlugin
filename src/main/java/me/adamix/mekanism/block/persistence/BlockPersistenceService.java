@@ -3,6 +3,7 @@ package me.adamix.mekanism.block.persistence;
 import com.jeff_media.customblockdata.CustomBlockData;
 import lombok.RequiredArgsConstructor;
 import me.adamix.mekanism.Mekanism;
+import me.adamix.mekanism.block.BlockInstance;
 import me.adamix.mekanism.block.instance.BlockInstanceService;
 import me.adamix.mekanism.type.WorldPos;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -10,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 @RequiredArgsConstructor
@@ -31,7 +33,18 @@ public class BlockPersistenceService {
         }
         dirty.clear();
         long end = System.currentTimeMillis();
-        log.info("Saving blocks took {}ms", (end - start));
+        log.info("Periodic save took {}ms", (end - start));
+    }
+
+    public void saveAll() {
+        long start = System.currentTimeMillis();
+
+        for (Map.Entry<WorldPos, BlockInstance> entry : blockInstanceService.getAll()) {
+            PersistentDataContainer pdc = new CustomBlockData(entry.getKey().resolveBlock(), plugin);
+            entry.getValue().save(pdc);
+        }
+        long end = System.currentTimeMillis();
+        log.info("Saving all blocks took {}ms", (end - start));
     }
 
     private void saveComponents(@NotNull WorldPos pos) {

@@ -20,6 +20,7 @@ import me.adamix.mekanism.block.registry.BlockRegistry;
 import me.adamix.mekanism.block.tick.BlockTickService;
 import me.adamix.mekanism.command.DebugCommand;
 import me.adamix.mekanism.command.GiveCommand;
+import me.adamix.mekanism.command.SaveCommand;
 import me.adamix.mekanism.command.TestCommand;
 import me.adamix.mekanism.data.MekanismKeys;
 import me.adamix.mekanism.energy.EnergyStorage;
@@ -63,6 +64,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 public final class Mekanism extends JavaPlugin {
     private NetworkService networkService;
@@ -120,6 +122,25 @@ public final class Mekanism extends JavaPlugin {
         menuService.update(player);
     }
 
+    public void clearSlots(
+            @NotNull Player player,
+            @NotNull BlockInstance instance
+    ) {
+        var energy = instance.get(EnergyComponent.class).orElseThrow();
+
+        for (BlockFace face : BlockFace.values()) {
+            energy.getPorts().put(face, PortType.DISABLED);
+
+            networkService.unregisterPort(
+                    instance.getPos(),
+                    face
+            );
+        }
+        blockFacade.updateBlock(instance.getPos().resolveBlock());
+        blockFacade.updateSurroundings(instance.getPos().resolveBlock());
+        menuService.update(player);
+    }
+
     public @NotNull ItemStack slotItemProvider(@NotNull BlockInstance instance, @NotNull RelativeFace relativeFace) {
         var energy = instance.get(EnergyComponent.class).orElseThrow();
 
@@ -163,7 +184,7 @@ public final class Mekanism extends JavaPlugin {
                 null
         ));
 
-        var ports = new HashMap<>(Map.of(
+        Supplier<Map<BlockFace, PortType>> portsSupplier = () -> new HashMap<>(Map.of(
                 BlockFace.SOUTH, PortType.INPUT,
                 BlockFace.NORTH, PortType.INPUT,
                 BlockFace.EAST, PortType.DISABLED,
@@ -220,6 +241,12 @@ public final class Mekanism extends JavaPlugin {
             meta.customName(Component.text("Close"));
         });
         closeIcon.setData(DataComponentTypes.ITEM_MODEL, Key.key("mekanism", "close_icon"));
+
+        var clearSlotsIcon = ItemStack.of(Material.PAPER);
+        clearSlotsIcon.editMeta(meta -> {
+            meta.customName(Component.text("Clear Slots"));
+        });
+        clearSlotsIcon.setData(DataComponentTypes.ITEM_MODEL, Key.key("mekanism", "clear_slots_icon"));
 
         List<WidgetDefinition> energyConfigWidgets = new ArrayList<>();
         energyConfigWidgets.add(new ButtonWidget(
@@ -319,6 +346,12 @@ public final class Mekanism extends JavaPlugin {
                         new ItemSlotWidget(
                                 6,
                                 dummySlotAccessor
+                        ),
+                        new ButtonIndicatorWidget(
+                                35,
+                                this::clearSlots,
+                                instance -> "Clear Slots",
+                                instance -> clearSlotsIcon
                         )
                 )
         );
@@ -330,7 +363,7 @@ public final class Mekanism extends JavaPlugin {
                 cableTransformation,
                 List.of(
                         block -> new EnergyComponent(
-                                ports,
+                                portsSupplier.get(),
                                 new EnergyStorage(1000, 100, 100, 0)
                         )
                 ),
@@ -443,7 +476,7 @@ public final class Mekanism extends JavaPlugin {
                 blockInstanceService
         );
         BlockTickService blockTickService = new BlockTickService(blockPersistenceService);
-        networkService = new NetworkService(getSLF4JLogger());
+        networkService = new NetworkService(getSLF4JLogger(), blockPersistenceService);
         BlockService blockService = new BlockService(blockRegistry, blockPersistenceService);
 
         blockFacade = new BlockFacade(
@@ -486,11 +519,12 @@ public final class Mekanism extends JavaPlugin {
             commands.registrar().register("debug", new DebugCommand(networkService, blockInstanceService));
             commands.registrar().register("mgive", new GiveCommand(blockRegistry));
             commands.registrar().register("mtest", new TestCommand(this, blockRegistry, menuService));
+            commands.registrar().register("msave", new SaveCommand(blockPersistenceService));
         });
     }
 
     @Override
     public void onDisable() {
-        blockPersistenceService.periodicSave();
+        blockPersistenceService.saveAll();
     }
 }

@@ -10,9 +10,12 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @RequiredArgsConstructor
 public class BlockInstanceService {
@@ -34,6 +37,10 @@ public class BlockInstanceService {
 
     public @NotNull Optional<BlockInstance> get(@NotNull WorldPos pos) {
         return Optional.ofNullable(instanceMap.get(pos));
+    }
+
+    public @NotNull Set<Map.Entry<WorldPos, BlockInstance>> getAll() {
+        return instanceMap.entrySet();
     }
 
     public void load(@NotNull BlockInstance instance) {

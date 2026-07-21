@@ -5,6 +5,7 @@ import me.adamix.mekanism.block.BlockInstance;
 import me.adamix.mekanism.block.MekanismBlockType;
 import me.adamix.mekanism.block.component.network.EnergyComponent;
 import me.adamix.mekanism.block.component.network.TransporterComponent;
+import me.adamix.mekanism.block.persistence.BlockPersistenceService;
 import me.adamix.mekanism.network.port.NetworkPort;
 import me.adamix.mekanism.network.port.PortType;
 import me.adamix.mekanism.type.BlockPos;
@@ -34,6 +35,7 @@ public class NetworkService {
     private final Map<UUID, AbstractNetwork> networksById = new HashMap<>();
     private final Map<WorldPos, UUID> transporterToId = new HashMap<>();
     private final Map<WorldPos, Map<BlockFace, NetworkPort>> portsOf = new HashMap<>();
+    private final BlockPersistenceService blockPersistenceService;
 
     public @NotNull Optional<AbstractNetwork> getNetwork(@NotNull WorldPos pos, @NotNull BlockFace face) {
         UUID networkId = null;
@@ -333,7 +335,10 @@ public class NetworkService {
     public void tick() {
         for (AbstractNetwork network : networksById.values()) {
             if (network instanceof EnergyNetwork energyNetwork) {
-                energyNetwork.tick();
+                var touched = energyNetwork.tick();
+                if (touched != null) {
+                    touched.forEach(blockPersistenceService::markDirty);
+                }
             }
             // if (network instanceof ItemNetwork itemNetwork) { tickItemNetwork(itemNetwork); }
         }
