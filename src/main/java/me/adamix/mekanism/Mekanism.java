@@ -248,6 +248,12 @@ public final class Mekanism extends JavaPlugin {
         });
         clearSlotsIcon.setData(DataComponentTypes.ITEM_MODEL, Key.key("mekanism", "clear_slots_icon"));
 
+        var ejectIcon = ItemStack.of(Material.PAPER);
+        ejectIcon.editMeta(meta -> {
+            meta.customName(Component.text("Eject is not yet supported"));
+        });
+        ejectIcon.setData(DataComponentTypes.ITEM_MODEL, Key.key("mekanism", "eject_icon"));
+
         List<WidgetDefinition> energyConfigWidgets = new ArrayList<>();
         energyConfigWidgets.add(new ButtonWidget(
                 0,
@@ -346,6 +352,11 @@ public final class Mekanism extends JavaPlugin {
                         new ItemSlotWidget(
                                 6,
                                 dummySlotAccessor
+                        ),
+                        new ButtonWidget(
+                                8,
+                                ejectIcon,
+                                _ -> {} 
                         ),
                         new ButtonIndicatorWidget(
                                 35,
