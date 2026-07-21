@@ -456,7 +456,24 @@ public final class Mekanism extends JavaPlugin {
                                             return "%d FE".formatted(component.getEnergy());
                                         },
                                         verticalIndicatorFrames
-                                )
+                                ),
+                                new ItemSlotWidget(2, dummySlotAccessor),
+                                new ItemSlotWidget(3, dummySlotAccessor),
+                                new ItemSlotWidget(4, dummySlotAccessor),
+                                new ItemSlotWidget(5, dummySlotAccessor),
+                                new ItemSlotWidget(6, dummySlotAccessor),
+
+                                new ItemSlotWidget(11, dummySlotAccessor),
+                                new ItemSlotWidget(12, dummySlotAccessor),
+                                new ItemSlotWidget(13, dummySlotAccessor),
+                                new ItemSlotWidget(14, dummySlotAccessor),
+                                new ItemSlotWidget(15, dummySlotAccessor),
+
+                                new ItemSlotWidget(20, dummySlotAccessor),
+                                new ItemSlotWidget(21, dummySlotAccessor),
+                                new ItemSlotWidget(22, dummySlotAccessor),
+                                new ItemSlotWidget(23, dummySlotAccessor),
+                                new ItemSlotWidget(24, dummySlotAccessor)
                         )
                 )
         ));
