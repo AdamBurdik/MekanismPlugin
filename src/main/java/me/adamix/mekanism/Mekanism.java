@@ -268,24 +268,6 @@ public final class Mekanism extends JavaPlugin {
                 instance -> slotItemProvider(instance, relativeFace)
         );
 
-        var energyConfigMenu = new MenuDefinition(
-                "<font:mekanism:spaces>\uFF08</font><font:mekanism:menu_titles>\uFF02</font>",
-                4,
-                List.of(
-                        new ButtonWidget(
-                                0,
-                                closeIcon,
-                                menuService::closeSubmenu
-                        ),
-                        slotIndicatorSupplier.apply(RelativeFace.TOP, 13),
-                        slotIndicatorSupplier.apply(RelativeFace.LEFT, 21),
-                        slotIndicatorSupplier.apply(RelativeFace.FRONT, 22),
-                        slotIndicatorSupplier.apply(RelativeFace.RIGHT, 23),
-                        slotIndicatorSupplier.apply(RelativeFace.BACK, 30),
-                        slotIndicatorSupplier.apply(RelativeFace.BOTTOM, 31)
-                )
-        );
-
         var dummySlotAccessor = new SlotAccessor() {
             @Override
             public @Nullable ItemStack get() {
@@ -302,6 +284,44 @@ public final class Mekanism extends JavaPlugin {
                 return false;
             }
         };
+
+        var energyConfigMenu = new MenuDefinition(
+                "<font:mekanism:spaces>\uFF08</font><font:mekanism:menu_titles>\uFF02</font>",
+                4,
+                List.of(
+                        new ButtonWidget(
+                                0,
+                                closeIcon,
+                                menuService::closeSubmenu
+                        ),
+                        slotIndicatorSupplier.apply(RelativeFace.TOP, 13),
+                        slotIndicatorSupplier.apply(RelativeFace.LEFT, 21),
+                        slotIndicatorSupplier.apply(RelativeFace.FRONT, 22),
+                        slotIndicatorSupplier.apply(RelativeFace.RIGHT, 23),
+                        slotIndicatorSupplier.apply(RelativeFace.BACK, 30),
+                        slotIndicatorSupplier.apply(RelativeFace.BOTTOM, 31),
+                        new ItemSlotWidget(
+                                2,
+                                dummySlotAccessor
+                        ),
+                        new ItemSlotWidget(
+                                3,
+                                dummySlotAccessor
+                        ),
+                        new ItemSlotWidget(
+                                4,
+                                dummySlotAccessor
+                        ),
+                        new ItemSlotWidget(
+                                5,
+                                dummySlotAccessor
+                        ),
+                        new ItemSlotWidget(
+                                6,
+                                dummySlotAccessor
+                        )
+                )
+        );
 
         registry.register(MekanismBlockType.BASIC_ENERGY_CUBE, new BlockDefinition(
                 Material.BARRIER,
@@ -328,7 +348,7 @@ public final class Mekanism extends JavaPlugin {
                                         },
                                         instance -> {
                                             EnergyComponent component = instance.get(EnergyComponent.class).orElseThrow();
-                                            return "%d FE".formatted(component.getEnergy());
+                                            return "%d FE/%d FE".formatted(component.getEnergy(), component.getCapacity());
                                         },
                                         frames
                                 ),

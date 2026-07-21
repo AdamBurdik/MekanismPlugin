@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class StoredBlockListDataType implements PersistentDataType<byte[], List<StoredBlock>> {
 
@@ -34,11 +35,17 @@ public class StoredBlockListDataType implements PersistentDataType<byte[], List<
             dos.writeInt(complex.size());
 
             for (StoredBlock block : complex) {
+                // Position
                 dos.writeInt(block.pos().x());
                 dos.writeInt(block.pos().y());
                 dos.writeInt(block.pos().z());
 
+                // Block Type
                 dos.writeUTF(block.type().name());
+
+                // Entity UUID (Most & Least Significant Bits)
+                dos.writeLong(block.entityId().getMostSignificantBits());
+                dos.writeLong(block.entityId().getLeastSignificantBits());
             }
 
             return baos.toByteArray();
@@ -61,10 +68,15 @@ public class StoredBlockListDataType implements PersistentDataType<byte[], List<
                 int z = dis.readInt();
                 String typeName = dis.readUTF();
 
+                // Read UUID bits
+                long mostSig = dis.readLong();
+                long leastSig = dis.readLong();
+                UUID entityId = new UUID(mostSig, leastSig);
+
                 BlockPos pos = new BlockPos(x, y, z);
                 MekanismBlockType type = MekanismBlockType.valueOf(typeName);
 
-                list.add(new StoredBlock(pos, type));
+                list.add(new StoredBlock(pos, type, entityId));
             }
 
             return list;

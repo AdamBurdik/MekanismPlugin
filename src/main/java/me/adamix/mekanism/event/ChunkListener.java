@@ -17,8 +17,11 @@ import me.adamix.mekanism.type.ChunkPos;
 import me.adamix.mekanism.type.StoredBlock;
 import me.adamix.mekanism.type.WorldPos;
 import me.adamix.mekanism.type.pdc.StoredBlockListDataType;
+import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.ItemDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.world.ChunkLoadEvent;
@@ -52,8 +55,6 @@ public class ChunkListener implements Listener {
                     chunk.getWorld().getName(),
                     stored.pos()
             );
-            blockService.loadBlock(pos, stored.type());
-            blocks.add(pos);
 
             Block block = pos.resolveBlock();
 
@@ -68,6 +69,20 @@ public class ChunkListener implements Listener {
                     networkContext,
                     definition
             );
+
+            ItemDisplay entity = (ItemDisplay) Bukkit.getEntity(stored.entityId());
+            if (entity == null) {
+                entity = definition.handler().spawnEntity(
+                        block,
+                        stored.type(),
+                        definition,
+                        networkContext,
+                        instance
+                );
+            }
+
+            blockService.loadBlock(pos, stored.type(), entity);
+            blocks.add(pos);
 
             instance.load(new CustomBlockData(block, plugin));
 

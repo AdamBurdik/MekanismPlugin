@@ -64,6 +64,8 @@ public class BlockFacade {
                 instance
         );
 
+        blockService.saveToChunkPdc(pos);
+
         // 6. Register block to network
         networkService.registerBlock(
                 block,

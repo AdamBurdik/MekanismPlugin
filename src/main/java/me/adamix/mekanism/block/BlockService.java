@@ -53,7 +53,6 @@ public class BlockService {
         blocksByChunk.computeIfAbsent(chunkPos, _ -> new ArrayList<>())
                 .add(pos);
         blockPersistenceService.markDirty(pos);
-        saveToChunkPdc(pos);
     }
 
     public void breakBlock(
@@ -128,7 +127,7 @@ public class BlockService {
         blockPersistenceService.markDirty(pos);
     }
 
-    private void saveToChunkPdc(WorldPos pos) {
+    public void saveToChunkPdc(WorldPos pos) {
         long start = System.currentTimeMillis();
         Chunk chunk = pos.resolveBlock().getChunk();
         PersistentDataContainer pdc = chunk.getPersistentDataContainer();
@@ -137,7 +136,11 @@ public class BlockService {
 
         List<StoredBlock> blocksInChunk = blocksByChunk.get(chunkPos)
                 .stream()
-                .map(w -> new StoredBlock(w.block(), locationToType.get(w)))
+                .map(w -> new StoredBlock(
+                        w.block(),
+                        locationToType.get(w),
+                        locationToEntity.get(w).getUniqueId()
+                ))
                 .toList();
 
         pdc.set(MekanismKeys.CHUNK_BLOCKS_KEY, StoredBlockListDataType.INSTANCE, blocksInChunk);
@@ -154,9 +157,10 @@ public class BlockService {
 
     public void loadBlock(
             @NotNull WorldPos pos,
-            @NotNull MekanismBlockType type
+            @NotNull MekanismBlockType type,
+            @NotNull ItemDisplay entity
     ) {
         locationToType.put(pos, type);
-        // TODO Spawn entity and save it
+        locationToEntity.put(pos, entity);
     }
 }
