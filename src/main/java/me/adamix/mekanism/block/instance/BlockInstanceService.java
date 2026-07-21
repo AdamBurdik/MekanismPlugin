@@ -35,4 +35,8 @@ public class BlockInstanceService {
     public @NotNull Optional<BlockInstance> get(@NotNull WorldPos pos) {
         return Optional.ofNullable(instanceMap.get(pos));
     }
+
+    public void load(@NotNull BlockInstance instance) {
+        instanceMap.put(instance.getPos(), instance);
+    }
 }

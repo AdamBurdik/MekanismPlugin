@@ -45,11 +45,11 @@ public class EnergyComponent implements Component {
 
     @Override
     public void load(@NotNull PersistentDataContainer pdc) {
-        todo();
+        storage.load(pdc);
     }
 
     @Override
     public void save(@NotNull PersistentDataContainer pdc) {
-        todo();
+        storage.save(pdc);
     }
 }

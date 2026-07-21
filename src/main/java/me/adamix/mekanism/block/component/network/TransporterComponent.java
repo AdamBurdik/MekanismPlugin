@@ -15,11 +15,10 @@ public record TransporterComponent(
 
     @Override
     public void load(@NotNull PersistentDataContainer pdc) {
-        todo();
+
     }
 
     @Override
     public void save(@NotNull PersistentDataContainer pdc) {
-        todo();
     }
 }

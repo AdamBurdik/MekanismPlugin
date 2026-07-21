@@ -4,7 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
 import me.adamix.mekanism.block.component.Component;
+import me.adamix.mekanism.data.MekanismKeys;
 import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
 @AllArgsConstructor
@@ -12,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 @ToString
 public class GeneratorEnergyComponent implements Component, EnergyExtractable, EnergyStorage {
     private long stored;
-    private final long capacity;
+    private long capacity;
 
     @Override
     public void load(@NotNull PersistentDataContainer pdc) {
@@ -21,7 +23,6 @@ public class GeneratorEnergyComponent implements Component, EnergyExtractable, E
 
     @Override
     public void save(@NotNull PersistentDataContainer pdc) {
-
     }
 
     @Override

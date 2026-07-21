@@ -14,6 +14,7 @@ import me.adamix.mekanism.block.handler.EnergyCubeHandler;
 import me.adamix.mekanism.block.handler.SolarGeneratorHandler;
 import me.adamix.mekanism.block.handler.UniversalCableHandler;
 import me.adamix.mekanism.block.instance.BlockInstanceService;
+import me.adamix.mekanism.block.persistence.BlockPersistenceService;
 import me.adamix.mekanism.block.registry.BlockDefinition;
 import me.adamix.mekanism.block.registry.BlockRegistry;
 import me.adamix.mekanism.block.tick.BlockTickService;
@@ -23,6 +24,7 @@ import me.adamix.mekanism.command.TestCommand;
 import me.adamix.mekanism.data.MekanismKeys;
 import me.adamix.mekanism.energy.EnergyStorage;
 import me.adamix.mekanism.event.BlockListener;
+import me.adamix.mekanism.event.ChunkListener;
 import me.adamix.mekanism.event.InventoryListener;
 import me.adamix.mekanism.item.SlotType;
 import me.adamix.mekanism.menu.MenuDefinition;
@@ -66,6 +68,7 @@ public final class Mekanism extends JavaPlugin {
     private NetworkService networkService;
     private BlockFacade blockFacade;
     private MenuService menuService;
+    private BlockPersistenceService blockPersistenceService;
 
     private final BiFunction<String, SlotType, ItemStack> slotSupplier = (name, type) -> {
         var itemStack = ItemStack.of(Material.PAPER);
@@ -413,11 +416,15 @@ public final class Mekanism extends JavaPlugin {
         menuService = new MenuService();
 
         BlockRegistry blockRegistry = new BlockRegistry();
-        BlockTickService blockTickService = new BlockTickService();
         BlockInstanceService blockInstanceService = new BlockInstanceService(blockRegistry);
-
+        blockPersistenceService = new BlockPersistenceService(
+                getSLF4JLogger(),
+                this,
+                blockInstanceService
+        );
+        BlockTickService blockTickService = new BlockTickService(blockPersistenceService);
         networkService = new NetworkService(getSLF4JLogger());
-        BlockService blockService = new BlockService(blockRegistry);
+        BlockService blockService = new BlockService(blockRegistry, blockPersistenceService);
 
         blockFacade = new BlockFacade(
                 blockService,
@@ -434,6 +441,8 @@ public final class Mekanism extends JavaPlugin {
                 .registerEvents(new BlockListener(blockFacade), this);
         Bukkit.getPluginManager()
                 .registerEvents(new InventoryListener(menuService), this);
+        Bukkit.getPluginManager()
+                .registerEvents(new ChunkListener(this, blockService, blockRegistry, networkService, blockInstanceService, blockTickService), this);
 
         Bukkit.getScheduler().runTaskTimerAsynchronously(
                 this,
@@ -446,6 +455,13 @@ public final class Mekanism extends JavaPlugin {
                 8
         );
 
+        Bukkit.getScheduler().runTaskTimer(
+                this,
+                blockPersistenceService::periodicSave,
+                10L,
+                20L * 30
+        );
+
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             commands.registrar().register("debug", new DebugCommand(networkService, blockInstanceService));
             commands.registrar().register("mgive", new GiveCommand(blockRegistry));
@@ -455,5 +471,6 @@ public final class Mekanism extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        blockPersistenceService.periodicSave();
     }
 }

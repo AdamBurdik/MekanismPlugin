@@ -2,14 +2,20 @@ package me.adamix.mekanism.energy;
 
 import lombok.Getter;
 import lombok.ToString;
+import me.adamix.mekanism.data.MekanismKeys;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
+import org.jetbrains.annotations.NotNull;
+
+import static me.adamix.utils.Utils.todo;
 
 @Getter
 @ToString
 public class EnergyStorage {
     private long energy;
-    private final long capacity;
-    private final long maxInsert;
-    private final long maxExtract;
+    private long capacity;
+    private long maxInsert;
+    private long maxExtract;
 
     public EnergyStorage(long capacity) {
         this(capacity, capacity, capacity, 0L);
@@ -52,5 +58,19 @@ public class EnergyStorage {
 
     public boolean isEmpty() {
         return energy == 0;
+    }
+
+    public void load(@NotNull PersistentDataContainer pdc) {
+        this.energy = pdc.get(MekanismKeys.ENERGY_COMPONENT_ENERGY, PersistentDataType.LONG).longValue();
+        this.capacity = pdc.get(MekanismKeys.ENERGY_COMPONENT_CAPACITY, PersistentDataType.LONG).longValue();
+        this.maxInsert = pdc.get(MekanismKeys.ENERGY_COMPONENT_MAX_INSERT, PersistentDataType.LONG).longValue();
+        this.maxExtract = pdc.get(MekanismKeys.ENERGY_COMPONENT_MAX_EXTRACT, PersistentDataType.LONG).longValue();
+    }
+
+    public void save(@NotNull PersistentDataContainer pdc) {
+        pdc.set(MekanismKeys.ENERGY_COMPONENT_ENERGY, PersistentDataType.LONG, energy);
+        pdc.set(MekanismKeys.ENERGY_COMPONENT_CAPACITY, PersistentDataType.LONG, capacity);
+        pdc.set(MekanismKeys.ENERGY_COMPONENT_MAX_INSERT, PersistentDataType.LONG, maxInsert);
+        pdc.set(MekanismKeys.ENERGY_COMPONENT_MAX_EXTRACT, PersistentDataType.LONG, maxExtract);
     }
 }

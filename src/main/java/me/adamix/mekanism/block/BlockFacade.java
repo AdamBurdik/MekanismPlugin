@@ -49,7 +49,7 @@ public class BlockFacade {
 
         for (Component component : instance.components()) {
             if (component instanceof TickableComponent tickable) {
-                blockTickService.register(tickable);
+                blockTickService.register(pos, tickable);
             }
         }
 
