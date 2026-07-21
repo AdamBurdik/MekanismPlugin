@@ -326,6 +326,8 @@ public class MenuService {
                     render(topInventory, indicator, context.instance(), new HashSet<>());
                 } else if (widget instanceof MultiSlotIndicatorWidget indicator) {
                     render(topInventory, indicator, context.instance(), new HashSet<>());
+                } else if (widget instanceof  ItemSlotWidget item) {
+                    render(topInventory, item, context.instance(), new HashSet<>());
                 }
             }
         }
@@ -337,6 +339,10 @@ public class MenuService {
 
         OpenMenuContext ctx = openMenus.get(player.getUniqueId());
         if (ctx == null) return;
+
+        if (!event.getClickedInventory().equals(ctx.inventory())) {
+            return;
+        }
 
         WidgetDefinition widget = findWidgetAt(slot, ctx.definition());
         if (widget == null) {
@@ -356,6 +362,29 @@ public class MenuService {
                 openSubmenu(player, ctx, submenu.subMenu());
             }
             case ItemSlotWidget item -> {
+                ItemStack cursor = event.getCursor();
+                ItemStack current = item.slotAccessor().get();
+
+                boolean shiftClick = event.isShiftClick();
+                boolean takingOut = cursor.getType().isAir();
+
+                if (takingOut) {
+                    item.slotAccessor().set(null);
+                    event.setCurrentItem(null);
+                    if (current != null) {
+                        player.getInventory().addItem(current);
+                    }
+                } else {
+                    if (!item.slotAccessor().canAccept(cursor)) {
+                        event.setCancelled(true);
+                        return;
+                    }
+                    item.slotAccessor().set(cursor.clone());
+                    event.setCurrentItem(cursor.clone());
+                    player.setItemOnCursor(null);
+                }
+
+                event.setCancelled(true);
             }
             case ButtonIndicatorWidget button -> {
                 event.setCancelled(true);

@@ -29,8 +29,10 @@ import me.adamix.mekanism.energy.EnergyStorage;
 import me.adamix.mekanism.event.BlockListener;
 import me.adamix.mekanism.event.ChunkListener;
 import me.adamix.mekanism.event.InventoryListener;
+import me.adamix.mekanism.infusion.InfusionMapping;
 import me.adamix.mekanism.infusion.InfusionStorage;
 import me.adamix.mekanism.infusion.InfusionType;
+import me.adamix.mekanism.infusion.InfusionTypeRegistry;
 import me.adamix.mekanism.item.SlotType;
 import me.adamix.mekanism.menu.MenuDefinition;
 import me.adamix.mekanism.menu.MenuService;
@@ -42,9 +44,11 @@ import me.adamix.mekanism.menu.widget.MultiSlotIndicatorWidget;
 import me.adamix.mekanism.menu.widget.SlotAccessor;
 import me.adamix.mekanism.menu.widget.SubMenuWidget;
 import me.adamix.mekanism.menu.widget.WidgetDefinition;
+import me.adamix.mekanism.menu.widget.slot.InfusionSlotAccessor;
 import me.adamix.mekanism.network.NetworkService;
 import me.adamix.mekanism.network.NetworkType;
 import me.adamix.mekanism.network.port.PortType;
+import me.adamix.mekanism.recipe.matcher.MaterialMatcher;
 import me.adamix.mekanism.type.RelativeFace;
 import me.adamix.utils.StringUtils;
 import net.kyori.adventure.key.Key;
@@ -76,6 +80,7 @@ public final class Mekanism extends JavaPlugin {
     private BlockFacade blockFacade;
     private MenuService menuService;
     private BlockPersistenceService blockPersistenceService;
+    private InfusionTypeRegistry infusionTypeRegistry;
 
     private final BiFunction<String, SlotType, ItemStack> slotSupplier = (name, type) -> {
         var itemStack = ItemStack.of(Material.PAPER);
@@ -505,6 +510,14 @@ public final class Mekanism extends JavaPlugin {
                 )
         ));
 
+        var infuserComponent = new InfuserComponent(
+                portsSupplier.get(),
+                new InfusionStorage(
+                        null, 0, 1000
+                ),
+                infusionTypeRegistry
+        );
+
         registry.register(MekanismBlockType.METALLURGIC_INFUSER, new BlockDefinition(
                 Material.BARRIER,
                 null,
@@ -517,18 +530,17 @@ public final class Mekanism extends JavaPlugin {
                                         2500, 100, 100, 0
                                 )
                         ),
-                        block -> new InfuserComponent(
-                                portsSupplier.get(),
-                                new InfusionStorage(
-                                        null, 0, 0
-                                )
-                        )
+                        block -> infuserComponent
                 ),
                 new MetallurgicInfuserHandler(),
                 new MenuDefinition(
-                        "<font:mekanism:spaces>\uFF08</font><font:mekanism:menu_titles>\uFF01</font>",
+                        "<font:mekanism:spaces>\uFF08</font><font:mekanism:menu_titles>\uFF03</font>",
                         4,
                         List.of(
+                                new ItemSlotWidget(
+                                        10,
+                                        new InfusionSlotAccessor(infuserComponent)
+                                ),
                                 new MultiSlotIndicatorWidget(
                                         List.of(8, 17, 26),
                                         26,
@@ -570,8 +582,11 @@ public final class Mekanism extends JavaPlugin {
                                             return offset + pct;
                                         },
                                         instance -> {
-                                            EnergyComponent component = instance.get(EnergyComponent.class).orElseThrow();
-                                            return "%d FE".formatted(component.getEnergy());
+                                            InfuserComponent component = instance.get(InfuserComponent.class).orElseThrow();
+                                            if (component.getType() == null) {
+                                                return "Empty";
+                                            }
+                                            return "%d %s".formatted(component.getAmount(), StringUtils.capitalizeFirst(component.getType().name().toLowerCase()));
                                         },
                                         infusionFrames
                                 )
@@ -593,6 +608,10 @@ public final class Mekanism extends JavaPlugin {
                 this,
                 blockInstanceService
         );
+        infusionTypeRegistry = new InfusionTypeRegistry();
+        infusionTypeRegistry.register(new InfusionMapping(new MaterialMatcher(Material.COAL), InfusionType.CARBON, 10));
+        infusionTypeRegistry.register(new InfusionMapping(new MaterialMatcher(Material.REDSTONE), InfusionType.REDSTONE, 10));
+
         BlockTickService blockTickService = new BlockTickService(blockPersistenceService);
         networkService = new NetworkService(getSLF4JLogger(), blockPersistenceService);
         BlockService blockService = new BlockService(blockRegistry, blockPersistenceService);
