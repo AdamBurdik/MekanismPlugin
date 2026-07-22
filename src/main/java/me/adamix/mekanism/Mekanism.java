@@ -531,7 +531,7 @@ public final class Mekanism extends JavaPlugin {
         registry.register(MekanismBlockType.METALLURGIC_INFUSER, new BlockDefinition(
                 Material.BARRIER,
                 null,
-                "mekanism:metallurgic_infuser",
+                "metallurgic_infuser",
                 fullBlockTransformation,
                 List.of(
                         block -> new EnergyComponent(
@@ -607,12 +607,15 @@ public final class Mekanism extends JavaPlugin {
                                                 case GOLD -> 0.75;
                                             };
 
+
+
+
                                             // 0 - 25%    = carbon
                                             // 25% - 50%  = redstone
                                             // 50% - 75%  = diamond
                                             // 75% - 100% = gold
 
-                                            double pct = 0.25 * component.getAmount() / component.getCapacity();
+                                            double pct = 0.2499 * component.getAmount() / component.getCapacity();
                                             return offset + pct;
                                         },
                                         instance -> {

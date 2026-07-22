@@ -35,7 +35,7 @@ public class GiveCommand implements BasicCommand {
         MekanismBlockType type = MekanismBlockType.valueOf(args[0].toUpperCase());
         BlockDefinition definition = blockRegistry.get(type).orElseThrow();
 
-        itemStack.setData(DataComponentTypes.ITEM_MODEL, Key.key(definition.itemModel()));
+        itemStack.setData(DataComponentTypes.ITEM_MODEL, Key.key("mekanism", definition.itemModel()));
         CustomModelData customModelData = CustomModelData.customModelData()
                 .addString("0")
                 .build();

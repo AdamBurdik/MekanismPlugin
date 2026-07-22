@@ -23,7 +23,7 @@ public class EntityUtils {
 
         itemStack.setData(
                 DataComponentTypes.ITEM_MODEL,
-                Key.key(itemModel)
+                Key.key("mekanism", itemModel)
         );
 
         if (customModelData != null) {

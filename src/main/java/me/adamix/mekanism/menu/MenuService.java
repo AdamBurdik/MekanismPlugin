@@ -245,7 +245,11 @@ public class MenuService {
             if (slot == widget.sourceSlot()) {
                 var frames = widget.frames();
 
-                int frameIndex = (int) Math.round(value * (frames.size() - 1));
+                int frameIndex = (int) (value * frames.size());
+
+                if (frameIndex >= frames.size()) {
+                    frameIndex = frames.size() - 1;
+                }
 
                 item = frames.get(frameIndex);
             } else {
