@@ -15,6 +15,8 @@ public class MekanismKeys {
     // Components keys
     public static @NotNull NamespacedKey NETWORK_TYPE_KEY;
 
+    public static @NotNull NamespacedKey BLOCK_PORTS;
+
     public static @NotNull NamespacedKey FACING;
 
     public static @NotNull NamespacedKey ENERGY_STORAGE_ENERGY;
@@ -30,13 +32,14 @@ public class MekanismKeys {
     public static final EnumDataType<NetworkType> NETWORK_TYPE = new EnumDataType<>(NetworkType.class);
     public static final EnumDataType<InfusionType> INFUSION_TYPE = new EnumDataType<>(InfusionType.class);
 
-
     public static void init(@NotNull JavaPlugin plugin) {
-        BLOCK_TYPE_KEY = new NamespacedKey(plugin, "mekanism_block_type");
-        CHUNK_BLOCKS_KEY = new NamespacedKey(plugin, "mekanism_chunk_blocks");
+        BLOCK_TYPE_KEY = new NamespacedKey(plugin, "block_type");
+        CHUNK_BLOCKS_KEY = new NamespacedKey(plugin, "chunk_blocks");
 
         // Components keys
         NETWORK_TYPE_KEY = new NamespacedKey(plugin, "network_type");
+
+        BLOCK_PORTS = new NamespacedKey(plugin, "block_ports");
 
         FACING = new NamespacedKey(plugin, "facing");
 
