@@ -3,12 +3,15 @@ package me.adamix.mekanism.block.component;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
+import me.adamix.mekanism.block.BlockInstance;
+import me.adamix.mekanism.block.component.network.EnergyComponent;
 import me.adamix.mekanism.infusion.InfusionMapping;
 import me.adamix.mekanism.infusion.InfusionStorage;
 import me.adamix.mekanism.infusion.InfusionType;
 import me.adamix.mekanism.infusion.InfusionTypeRegistry;
-import me.adamix.mekanism.menu.widget.SlotAccessor;
 import me.adamix.mekanism.network.port.PortType;
+import me.adamix.mekanism.recipe.RecipeRegistry;
+import me.adamix.mekanism.recipe.infuser.InfuserRecipe;
 import org.bukkit.block.BlockFace;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -22,11 +25,15 @@ import java.util.Optional;
 @Getter
 @ToString
 public class InfuserComponent implements Component, TickableComponent {
+    private static final long ENERGY_PER_TICK = 20;
+
     private final @NotNull Map<BlockFace, PortType> ports;
     private final @NotNull InfusionStorage storage;
     private final InfusionTypeRegistry infusionTypeRegistry;
+    private final RecipeRegistry registryRegistry;
     private final ItemStack[] slots = new ItemStack[3]; // Main, Infusion, Output
-    private int progress;
+    private int progress = 0;
+    private int maxProgress = 0;
 
     public int insert(@Nullable InfusionType type, int amount, boolean simulate) {
         return storage.insert(type, amount, simulate);
@@ -68,6 +75,10 @@ public class InfuserComponent implements Component, TickableComponent {
         return slots[2];
     }
 
+    public void setOutputSlot(@Nullable ItemStack itemStack) {
+        slots[2] = itemStack;
+    }
+
     @Override
     public void load(@NotNull PersistentDataContainer pdc) {
         storage.load(pdc);
@@ -79,8 +90,54 @@ public class InfuserComponent implements Component, TickableComponent {
     }
 
     @Override
-    public void tick() {
+    public void tick(@NotNull BlockInstance instance) {
         fillInfusionBuffer();
+
+        ItemStack mainSlot = slots[0];
+        if (mainSlot == null || storage.getCurrentType() == null) {
+            progress = 0;
+            return;
+        }
+
+        Optional<InfuserRecipe> recipeOpt = registryRegistry.findInfuserRecipe(mainSlot, storage.getCurrentType());
+        if (recipeOpt.isEmpty()) {
+            progress = 0;
+            return;
+        }
+
+        InfuserRecipe recipe = recipeOpt.get();
+        if (storage.getAmount() < recipe.infusionAmount()) {
+            progress = 0;
+            return;
+        }
+
+        ItemStack currentOutput = slots[2];
+        if (!canFitOutput(recipe.output())) return;
+
+        maxProgress = recipe.processingTime();
+
+        EnergyComponent energyComponent = instance.get(EnergyComponent.class).orElseThrow();
+        long extracted = energyComponent.extract(ENERGY_PER_TICK, true);
+        if (extracted < ENERGY_PER_TICK) {
+            return;
+        }
+
+        progress++;
+        if (progress >= recipe.processingTime()) {
+            energyComponent.extract(ENERGY_PER_TICK, false);
+
+            ItemStack newMain = mainSlot.clone();
+            newMain.setAmount(mainSlot.getAmount() - 1);
+            slots[0] = newMain.getAmount() == 0 ? null : newMain;
+
+            storage.consume(recipe.infusionType(), recipe.infusionAmount());
+
+            ItemStack newOutput = currentOutput == null ? recipe.output().clone() : currentOutput.clone();
+            if (currentOutput != null) newOutput.setAmount(currentOutput.getAmount() + recipe.output().getAmount());
+            slots[2] = newOutput;
+
+            progress = 0;
+        }
     }
 
     private void fillInfusionBuffer() {
@@ -98,5 +155,15 @@ public class InfuserComponent implements Component, TickableComponent {
             reduced.setAmount(reduced.getAmount() - 1);
             slots[1] = reduced.getAmount() == 0 ? null : reduced;
         }
+    }
+
+    private boolean canFitOutput(@NotNull ItemStack itemStack) {
+        ItemStack currentOutput = slots[2];
+        if (currentOutput == null) return true;
+        if (currentOutput.getType() != itemStack.getType()) return false;
+        if (currentOutput.getAmount() + itemStack.getAmount() > 64) return false;
+        // TODO Add check for tags/custom items
+
+        return true;
     }
 }

@@ -6,8 +6,10 @@ import me.adamix.mekanism.block.BlockInstance;
 import me.adamix.mekanism.menu.widget.ButtonIndicatorWidget;
 import me.adamix.mekanism.menu.widget.ButtonWidget;
 import me.adamix.mekanism.menu.widget.IndicatorWidget;
+import me.adamix.mekanism.menu.widget.ItemSlotSupplierWidget;
 import me.adamix.mekanism.menu.widget.ItemSlotWidget;
 import me.adamix.mekanism.menu.widget.MultiSlotIndicatorWidget;
+import me.adamix.mekanism.menu.widget.SlotAccessor;
 import me.adamix.mekanism.menu.widget.SubMenuWidget;
 import me.adamix.mekanism.menu.widget.WidgetDefinition;
 import net.kyori.adventure.key.Key;
@@ -197,10 +199,10 @@ public class MenuService {
                 occupiedSlots.add(button.slot());
             }
             case ItemSlotWidget item -> {
+                occupiedSlots.add(item.slot());
                 var itemStack = item.slotAccessor().get();
                 if (itemStack == null) itemStack = ItemStack.of(Material.AIR);
                 inventory.setItem(item.slot(), itemStack);
-                occupiedSlots.add(item.slot());
             }
             case SubMenuWidget submenu -> {
                 inventory.setItem(submenu.slot(), submenu.icon());
@@ -218,6 +220,14 @@ public class MenuService {
 
                 inventory.setItem(button.slot(), item);
                 occupiedSlots.add(button.slot());
+            }
+            case ItemSlotSupplierWidget item -> {
+                occupiedSlots.add(item.slot());
+                var itemStack = item.slotAccessor()
+                        .apply(instance)
+                        .get();
+                if (itemStack == null) itemStack = ItemStack.of(Material.AIR);
+                inventory.setItem(item.slot(), itemStack);
             }
         }
     }
@@ -326,7 +336,9 @@ public class MenuService {
                     render(topInventory, indicator, context.instance(), new HashSet<>());
                 } else if (widget instanceof MultiSlotIndicatorWidget indicator) {
                     render(topInventory, indicator, context.instance(), new HashSet<>());
-                } else if (widget instanceof  ItemSlotWidget item) {
+                } else if (widget instanceof ItemSlotWidget item) {
+                    render(topInventory, item, context.instance(), new HashSet<>());
+                } else if (widget instanceof ItemSlotSupplierWidget item) {
                     render(topInventory, item, context.instance(), new HashSet<>());
                 }
             }
@@ -390,6 +402,32 @@ public class MenuService {
                 event.setCancelled(true);
                 button.onClick().accept(player, ctx.instance());
             }
+            case ItemSlotSupplierWidget item -> {
+                ItemStack cursor = event.getCursor();
+                SlotAccessor accessor = item.slotAccessor().apply(ctx.instance());
+                ItemStack current = accessor.get();
+
+                boolean shiftClick = event.isShiftClick();
+                boolean takingOut = cursor.getType().isAir();
+
+                if (takingOut) {
+                    accessor.set(null);
+                    event.setCurrentItem(null);
+                    if (current != null) {
+                        player.getInventory().addItem(current);
+                    }
+                } else {
+                    if (!accessor.canAccept(cursor)) {
+                        event.setCancelled(true);
+                        return;
+                    }
+                    accessor.set(cursor.clone());
+                    event.setCurrentItem(cursor.clone());
+                    player.setItemOnCursor(null);
+                }
+
+                event.setCancelled(true);
+            }
         }
     }
 
@@ -417,6 +455,9 @@ public class MenuService {
                 }
                 case ButtonIndicatorWidget button -> {
                     if (button.slot() == slot) return button;
+                }
+                case ItemSlotSupplierWidget item -> {
+                    if (item.slot() == slot) return item;
                 }
             }
         }

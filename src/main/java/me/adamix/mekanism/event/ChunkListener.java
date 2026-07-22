@@ -94,7 +94,7 @@ public class ChunkListener implements Listener {
 
             for (Component component : instance.components()) {
                 if (component instanceof TickableComponent tickable) {
-                    blockTickService.register(pos, tickable);
+                    blockTickService.register(pos, instance, tickable);
                 }
             }
 

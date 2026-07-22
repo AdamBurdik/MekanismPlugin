@@ -39,15 +39,19 @@ import me.adamix.mekanism.menu.MenuService;
 import me.adamix.mekanism.menu.widget.ButtonIndicatorWidget;
 import me.adamix.mekanism.menu.widget.ButtonWidget;
 import me.adamix.mekanism.menu.widget.IndicatorWidget;
+import me.adamix.mekanism.menu.widget.ItemSlotSupplierWidget;
 import me.adamix.mekanism.menu.widget.ItemSlotWidget;
 import me.adamix.mekanism.menu.widget.MultiSlotIndicatorWidget;
 import me.adamix.mekanism.menu.widget.SlotAccessor;
 import me.adamix.mekanism.menu.widget.SubMenuWidget;
 import me.adamix.mekanism.menu.widget.WidgetDefinition;
+import me.adamix.mekanism.menu.widget.slot.InfuserMainSlotAccessor;
+import me.adamix.mekanism.menu.widget.slot.InfuserOutputSlotAccessor;
 import me.adamix.mekanism.menu.widget.slot.InfusionSlotAccessor;
 import me.adamix.mekanism.network.NetworkService;
 import me.adamix.mekanism.network.NetworkType;
 import me.adamix.mekanism.network.port.PortType;
+import me.adamix.mekanism.recipe.RecipeRegistry;
 import me.adamix.mekanism.recipe.matcher.MaterialMatcher;
 import me.adamix.mekanism.type.RelativeFace;
 import me.adamix.utils.StringUtils;
@@ -81,6 +85,7 @@ public final class Mekanism extends JavaPlugin {
     private MenuService menuService;
     private BlockPersistenceService blockPersistenceService;
     private InfusionTypeRegistry infusionTypeRegistry;
+    private RecipeRegistry recipeRegistry;
 
     private final BiFunction<String, SlotType, ItemStack> slotSupplier = (name, type) -> {
         var itemStack = ItemStack.of(Material.PAPER);
@@ -386,7 +391,7 @@ public final class Mekanism extends JavaPlugin {
                 List.of(
                         block -> new EnergyComponent(
                                 portsSupplier.get(),
-                                new EnergyStorage(1000, 100, 100, 0)
+                                new EnergyStorage(1600000, 1600, 1600, 0)
                         )
                 ),
                 new EnergyCubeHandler(),
@@ -452,6 +457,18 @@ public final class Mekanism extends JavaPlugin {
             }
         }
 
+        List<ItemStack> infuserArrowIndicator = new ArrayList<>();
+        for (int i = 0; i <= 32; i++) {
+            ItemStack item = ItemStack.of(Material.PAPER);
+            CustomModelData customModelData = CustomModelData.customModelData()
+                    .addString(Integer.toString(i))
+                    .build();
+            item.setData(DataComponentTypes.CUSTOM_MODEL_DATA, customModelData);
+            item.setData(DataComponentTypes.ITEM_MODEL, Key.key("mekanism", "infuser_arrow_indicator"));
+
+            infuserArrowIndicator.add(item);
+        }
+
         registry.register(MekanismBlockType.SOLAR_GENERATOR, new BlockDefinition(
                 Material.BARRIER,
                 null,
@@ -467,7 +484,8 @@ public final class Mekanism extends JavaPlugin {
                                         BlockFace.UP, PortType.DISABLED,
                                         BlockFace.DOWN, PortType.OUTPUT
                                 ),
-                                new EnergyStorage(1000, 0, 10, 0)
+                                new EnergyStorage(3840, 0, 20, 0),
+                                20
                         )
                 ),
                 new SolarGeneratorHandler(),
@@ -510,14 +528,6 @@ public final class Mekanism extends JavaPlugin {
                 )
         ));
 
-        var infuserComponent = new InfuserComponent(
-                portsSupplier.get(),
-                new InfusionStorage(
-                        null, 0, 1000
-                ),
-                infusionTypeRegistry
-        );
-
         registry.register(MekanismBlockType.METALLURGIC_INFUSER, new BlockDefinition(
                 Material.BARRIER,
                 null,
@@ -527,19 +537,43 @@ public final class Mekanism extends JavaPlugin {
                         block -> new EnergyComponent(
                                 portsSupplier.get(),
                                 new EnergyStorage(
-                                        2500, 100, 100, 0
+                                        8000, 100, 100, 0
                                 )
                         ),
-                        block -> infuserComponent
+                        block -> new InfuserComponent(
+                                portsSupplier.get(),
+                                new InfusionStorage(
+                                        null, 0, 1000
+                                ),
+                                infusionTypeRegistry,
+                                recipeRegistry
+                        )
                 ),
                 new MetallurgicInfuserHandler(),
                 new MenuDefinition(
                         "<font:mekanism:spaces>\uFF08</font><font:mekanism:menu_titles>\uFF03</font>",
                         4,
                         List.of(
-                                new ItemSlotWidget(
+                                new ItemSlotSupplierWidget(
                                         10,
-                                        new InfusionSlotAccessor(infuserComponent)
+                                        instance -> {
+                                            InfuserComponent component = instance.get(InfuserComponent.class).orElseThrow();
+                                            return new InfusionSlotAccessor(component);
+                                        }
+                                ),
+                                new ItemSlotSupplierWidget(
+                                        20,
+                                        instance -> {
+                                            InfuserComponent component = instance.get(InfuserComponent.class).orElseThrow();
+                                            return new InfuserMainSlotAccessor(component);
+                                        }
+                                ),
+                                new ItemSlotSupplierWidget(
+                                        24,
+                                        instance -> {
+                                            InfuserComponent component = instance.get(InfuserComponent.class).orElseThrow();
+                                            return new InfuserOutputSlotAccessor(component);
+                                        }
                                 ),
                                 new MultiSlotIndicatorWidget(
                                         List.of(8, 17, 26),
@@ -589,6 +623,22 @@ public final class Mekanism extends JavaPlugin {
                                             return "%d %s".formatted(component.getAmount(), StringUtils.capitalizeFirst(component.getType().name().toLowerCase()));
                                         },
                                         infusionFrames
+                                ),
+                                new MultiSlotIndicatorWidget(
+                                        List.of(21, 22, 23),
+                                        23,
+                                        1,
+                                        instance -> {
+                                            InfuserComponent component = instance.get(InfuserComponent.class).orElseThrow();
+                                            if (component.getMaxProgress() == 0) return 0.0;
+                                            return ((double) component.getProgress()) / component.getMaxProgress();
+                                        },
+                                        instance -> {
+                                            InfuserComponent component = instance.get(InfuserComponent.class).orElseThrow();
+                                            if (component.getMaxProgress() == 0) return "0%";
+                                            return 100.0 * component.getProgress() / component.getMaxProgress() + "%";
+                                        },
+                                        infuserArrowIndicator
                                 )
                         )
                 )
@@ -601,6 +651,7 @@ public final class Mekanism extends JavaPlugin {
 
         menuService = new MenuService();
 
+        recipeRegistry = new RecipeRegistry();
         BlockRegistry blockRegistry = new BlockRegistry();
         BlockInstanceService blockInstanceService = new BlockInstanceService(blockRegistry);
         blockPersistenceService = new BlockPersistenceService(
@@ -642,7 +693,7 @@ public final class Mekanism extends JavaPlugin {
                     menuService.tickOpenMenus();
                 },
                 0L,
-                8
+                1
         );
 
         Bukkit.getScheduler().runTaskTimer(
