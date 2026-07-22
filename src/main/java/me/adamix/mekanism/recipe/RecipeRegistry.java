@@ -4,6 +4,7 @@ import io.papermc.paper.datacomponent.DataComponentTypes;
 import me.adamix.mekanism.infusion.InfusionType;
 import me.adamix.mekanism.recipe.infuser.InfuserRecipe;
 import me.adamix.mekanism.recipe.matcher.MaterialMatcher;
+import me.adamix.mekanism.recipe.smelter.SmelterRecipe;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
@@ -33,6 +34,12 @@ public class RecipeRegistry {
                 enrichedIron,
                 200
         ));
+
+        register(RecipeType.SMELTING, new SmelterRecipe(
+                new MaterialMatcher(Material.IRON_ORE),
+                ItemStack.of(Material.IRON_INGOT),
+                200
+        ));
     }
 
     public <T> @NotNull List<T> getRecipes(@NotNull RecipeType type, @NotNull Class<T> clazz) {
@@ -57,6 +64,14 @@ public class RecipeRegistry {
         return getRecipes(RecipeType.INFUSING, InfuserRecipe.class).stream()
                 .filter(r -> r.mainInput().matches(mainInput))
                 .filter(r -> r.infusionType() == availableType)
+                .findFirst();
+    }
+
+    public @NotNull Optional<SmelterRecipe> findSmelterRecipe(
+            @NotNull ItemStack mainInput
+    ) {
+        return getRecipes(RecipeType.SMELTING, SmelterRecipe.class).stream()
+                .filter(r -> r.mainInput().matches(mainInput))
                 .findFirst();
     }
 }

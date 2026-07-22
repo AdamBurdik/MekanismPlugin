@@ -9,7 +9,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.ItemDisplay;
 import org.jetbrains.annotations.NotNull;
 
-public class MetallurgicInfuserHandler implements BlockHandler {
+public class GenericBlockHandler implements BlockHandler {
     @Override
     public @NotNull ItemDisplay spawnEntity(
             @NotNull Block block,

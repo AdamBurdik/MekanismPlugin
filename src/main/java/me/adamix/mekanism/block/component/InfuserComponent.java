@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import me.adamix.mekanism.block.BlockInstance;
+import me.adamix.mekanism.block.component.item.GenericSlotsComponent;
 import me.adamix.mekanism.block.component.network.EnergyComponent;
 import me.adamix.mekanism.infusion.InfusionMapping;
 import me.adamix.mekanism.infusion.InfusionStorage;
@@ -12,6 +13,7 @@ import me.adamix.mekanism.infusion.InfusionTypeRegistry;
 import me.adamix.mekanism.network.port.PortType;
 import me.adamix.mekanism.recipe.RecipeRegistry;
 import me.adamix.mekanism.recipe.infuser.InfuserRecipe;
+import me.adamix.utils.ItemUtils;
 import org.bukkit.block.BlockFace;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -24,13 +26,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Getter
 @ToString
-public class InfuserComponent implements Component, TickableComponent {
+public class InfuserComponent implements Component, TickableComponent, GenericSlotsComponent {
     private static final long ENERGY_PER_TICK = 20;
 
     private final @NotNull Map<BlockFace, PortType> ports;
     private final @NotNull InfusionStorage storage;
     private final InfusionTypeRegistry infusionTypeRegistry;
-    private final RecipeRegistry registryRegistry;
+    private final RecipeRegistry recipeRegistry;
     private final ItemStack[] slots = new ItemStack[3]; // Main, Infusion, Output
     private int progress = 0;
     private int maxProgress = 0;
@@ -55,14 +57,6 @@ public class InfuserComponent implements Component, TickableComponent {
         return storage.getCapacity();
     }
 
-    public @Nullable ItemStack getMainSlot() {
-        return slots[0];
-    }
-
-    public void setMainSlot(@Nullable ItemStack itemStack) {
-        slots[0] = itemStack;
-    }
-
     public @Nullable ItemStack getInfusionSlot() {
         return slots[1];
     }
@@ -71,10 +65,22 @@ public class InfuserComponent implements Component, TickableComponent {
         slots[1] = itemStack;
     }
 
+    @Override
+    public @Nullable ItemStack getMainSlot() {
+        return slots[0];
+    }
+
+    @Override
+    public void setMainSlot(@Nullable ItemStack itemStack) {
+        slots[0] = itemStack;
+    }
+
+    @Override
     public @Nullable ItemStack getOutputSlot() {
         return slots[2];
     }
 
+    @Override
     public void setOutputSlot(@Nullable ItemStack itemStack) {
         slots[2] = itemStack;
     }
@@ -99,7 +105,7 @@ public class InfuserComponent implements Component, TickableComponent {
             return;
         }
 
-        Optional<InfuserRecipe> recipeOpt = registryRegistry.findInfuserRecipe(mainSlot, storage.getCurrentType());
+        Optional<InfuserRecipe> recipeOpt = recipeRegistry.findInfuserRecipe(mainSlot, storage.getCurrentType());
         if (recipeOpt.isEmpty()) {
             progress = 0;
             return;
@@ -112,7 +118,7 @@ public class InfuserComponent implements Component, TickableComponent {
         }
 
         ItemStack currentOutput = slots[2];
-        if (!canFitOutput(recipe.output())) return;
+        if (!ItemUtils.canFitOutput(currentOutput, recipe.output())) return;
 
         maxProgress = recipe.processingTime();
 
@@ -155,15 +161,5 @@ public class InfuserComponent implements Component, TickableComponent {
             reduced.setAmount(reduced.getAmount() - 1);
             slots[1] = reduced.getAmount() == 0 ? null : reduced;
         }
-    }
-
-    private boolean canFitOutput(@NotNull ItemStack itemStack) {
-        ItemStack currentOutput = slots[2];
-        if (currentOutput == null) return true;
-        if (currentOutput.getType() != itemStack.getType()) return false;
-        if (currentOutput.getAmount() + itemStack.getAmount() > 64) return false;
-        // TODO Add check for tags/custom items
-
-        return true;
     }
 }

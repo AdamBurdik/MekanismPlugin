@@ -9,10 +9,12 @@ import me.adamix.mekanism.block.BlockService;
 import me.adamix.mekanism.block.MekanismBlockType;
 import me.adamix.mekanism.block.component.GeneratorEnergyComponent;
 import me.adamix.mekanism.block.component.InfuserComponent;
+import me.adamix.mekanism.block.component.SmelterComponent;
+import me.adamix.mekanism.block.component.item.GenericSlotsComponent;
 import me.adamix.mekanism.block.component.network.EnergyComponent;
 import me.adamix.mekanism.block.component.network.TransporterComponent;
 import me.adamix.mekanism.block.handler.EnergyCubeHandler;
-import me.adamix.mekanism.block.handler.MetallurgicInfuserHandler;
+import me.adamix.mekanism.block.handler.GenericBlockHandler;
 import me.adamix.mekanism.block.handler.SolarGeneratorHandler;
 import me.adamix.mekanism.block.handler.UniversalCableHandler;
 import me.adamix.mekanism.block.instance.BlockInstanceService;
@@ -38,6 +40,7 @@ import me.adamix.mekanism.menu.MenuDefinition;
 import me.adamix.mekanism.menu.MenuService;
 import me.adamix.mekanism.menu.widget.ButtonIndicatorWidget;
 import me.adamix.mekanism.menu.widget.ButtonWidget;
+import me.adamix.mekanism.menu.widget.EmptySlotsWidget;
 import me.adamix.mekanism.menu.widget.IndicatorWidget;
 import me.adamix.mekanism.menu.widget.ItemSlotSupplierWidget;
 import me.adamix.mekanism.menu.widget.ItemSlotWidget;
@@ -45,8 +48,8 @@ import me.adamix.mekanism.menu.widget.MultiSlotIndicatorWidget;
 import me.adamix.mekanism.menu.widget.SlotAccessor;
 import me.adamix.mekanism.menu.widget.SubMenuWidget;
 import me.adamix.mekanism.menu.widget.WidgetDefinition;
-import me.adamix.mekanism.menu.widget.slot.InfuserMainSlotAccessor;
-import me.adamix.mekanism.menu.widget.slot.InfuserOutputSlotAccessor;
+import me.adamix.mekanism.menu.widget.slot.GenericMainSlotAccessor;
+import me.adamix.mekanism.menu.widget.slot.GenericOutputSlotAccessor;
 import me.adamix.mekanism.menu.widget.slot.InfusionSlotAccessor;
 import me.adamix.mekanism.network.NetworkService;
 import me.adamix.mekanism.network.NetworkType;
@@ -469,6 +472,18 @@ public final class Mekanism extends JavaPlugin {
             infuserArrowIndicator.add(item);
         }
 
+        List<ItemStack> thickIndicatorFrames = new ArrayList<>();
+        for (int i = 0; i < 24; i++) {
+            ItemStack item = ItemStack.of(Material.PAPER);
+            CustomModelData customModelData = CustomModelData.customModelData()
+                    .addString(Integer.toString(i))
+                    .build();
+            item.setData(DataComponentTypes.CUSTOM_MODEL_DATA, customModelData);
+            item.setData(DataComponentTypes.ITEM_MODEL, Key.key("mekanism", "thick_indicator"));
+
+            thickIndicatorFrames.add(item);
+        }
+
         registry.register(MekanismBlockType.SOLAR_GENERATOR, new BlockDefinition(
                 Material.BARRIER,
                 null,
@@ -549,7 +564,7 @@ public final class Mekanism extends JavaPlugin {
                                 recipeRegistry
                         )
                 ),
-                new MetallurgicInfuserHandler(),
+                new GenericBlockHandler(),
                 new MenuDefinition(
                         "<font:mekanism:spaces>\uFF08</font><font:mekanism:menu_titles>\uFF03</font>",
                         4,
@@ -565,14 +580,14 @@ public final class Mekanism extends JavaPlugin {
                                         20,
                                         instance -> {
                                             InfuserComponent component = instance.get(InfuserComponent.class).orElseThrow();
-                                            return new InfuserMainSlotAccessor(component);
+                                            return new GenericMainSlotAccessor(component);
                                         }
                                 ),
                                 new ItemSlotSupplierWidget(
                                         24,
                                         instance -> {
                                             InfuserComponent component = instance.get(InfuserComponent.class).orElseThrow();
-                                            return new InfuserOutputSlotAccessor(component);
+                                            return new GenericOutputSlotAccessor(component);
                                         }
                                 ),
                                 new MultiSlotIndicatorWidget(
@@ -608,8 +623,6 @@ public final class Mekanism extends JavaPlugin {
                                             };
 
 
-
-
                                             // 0 - 25%    = carbon
                                             // 25% - 50%  = redstone
                                             // 50% - 75%  = diamond
@@ -642,6 +655,77 @@ public final class Mekanism extends JavaPlugin {
                                             return 100.0 * component.getProgress() / component.getMaxProgress() + "%";
                                         },
                                         infuserArrowIndicator
+                                )
+                        )
+                )
+        ));
+
+        registry.register(MekanismBlockType.ENERGIZED_SMELTER, new BlockDefinition(
+                Material.BARRIER,
+                null,
+                "energized_smelter",
+                fullBlockTransformation,
+                List.of(
+                        block -> new EnergyComponent(
+                                portsSupplier.get(),
+                                new EnergyStorage(
+                                        8000, 100, 100, 0
+                                )
+                        ),
+                        block -> new SmelterComponent(
+                                recipeRegistry
+                        )
+
+                ),
+                new GenericBlockHandler(),
+                new MenuDefinition(
+                        "<font:mekanism:spaces>\uFF08</font><font:mekanism:menu_titles>\uFF04</font>",
+                        4,
+                        List.of(
+                                new EmptySlotsWidget(12, 21),
+                                new ItemSlotSupplierWidget(
+                                        3,
+                                        instance -> {
+                                            GenericSlotsComponent component = instance.get(GenericSlotsComponent.class).orElseThrow();
+                                            return new GenericMainSlotAccessor(component);
+                                        }
+                                ),
+                                new ItemSlotSupplierWidget(
+                                        15,
+                                        instance -> {
+                                            GenericSlotsComponent component = instance.get(GenericSlotsComponent.class).orElseThrow();
+                                            return new GenericOutputSlotAccessor(component);
+                                        }
+                                ),
+                                new MultiSlotIndicatorWidget(
+                                        List.of(13, 14),
+                                        14,
+                                        1,
+                                        instance -> {
+                                            SmelterComponent component = instance.get(SmelterComponent.class).orElseThrow();
+                                            if (component.getMaxProgress() == 0) return 0.0;
+                                            return 1.0 * component.getProgress() / component.getMaxProgress();
+                                        },
+                                        instance -> {
+                                            SmelterComponent component = instance.get(SmelterComponent.class).orElseThrow();
+                                            if (component.getMaxProgress() == 0) return "0%";
+                                            return 100.0 * component.getProgress() / component.getMaxProgress() + "%";
+                                        },
+                                        thickIndicatorFrames
+                                ),
+                                new MultiSlotIndicatorWidget(
+                                        List.of(8, 17, 26),
+                                        26,
+                                        3,
+                                        instance -> {
+                                            EnergyComponent component = instance.get(EnergyComponent.class).orElseThrow();
+                                            return 1.0 * component.getEnergy() / component.getCapacity();
+                                        },
+                                        instance -> {
+                                            EnergyComponent component = instance.get(EnergyComponent.class).orElseThrow();
+                                            return "%d FE".formatted(component.getEnergy());
+                                        },
+                                        verticalIndicatorFrames
                                 )
                         )
                 )

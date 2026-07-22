@@ -27,6 +27,13 @@
 			"height": 89,
 			"chars": ["\uFF03"],
 			"file": "mekanism:gui/metallurgic_infuser.png"
+		},
+		{
+			"type": "bitmap",
+			"ascent": 13,
+			"height": 89,
+			"chars": ["\uFF04"],
+			"file": "mekanism:gui/energized_smelter.png"
 		}
 	]
 }

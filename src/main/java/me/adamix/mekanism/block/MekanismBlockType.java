@@ -15,6 +15,7 @@ public enum MekanismBlockType {
 
     // Machines
     METALLURGIC_INFUSER,
+    ENERGIZED_SMELTER,
 
     TEST_BLOCK
 }

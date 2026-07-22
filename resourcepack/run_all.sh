@@ -9,5 +9,6 @@ python3 energy_indicator_generator.py
 python3 infuser_indicator_generator.py
 python3 energy_vertical_indicator_generator.py
 python3 slot_indicators_generator.py
+python3 thick_indicator_generator.py
 python3 zip.py
 echo "Resource pack generation is finished"

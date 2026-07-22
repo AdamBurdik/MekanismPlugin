@@ -5,6 +5,7 @@ import io.papermc.paper.datacomponent.item.TooltipDisplay;
 import me.adamix.mekanism.block.BlockInstance;
 import me.adamix.mekanism.menu.widget.ButtonIndicatorWidget;
 import me.adamix.mekanism.menu.widget.ButtonWidget;
+import me.adamix.mekanism.menu.widget.EmptySlotsWidget;
 import me.adamix.mekanism.menu.widget.IndicatorWidget;
 import me.adamix.mekanism.menu.widget.ItemSlotSupplierWidget;
 import me.adamix.mekanism.menu.widget.ItemSlotWidget;
@@ -229,6 +230,7 @@ public class MenuService {
                 if (itemStack == null) itemStack = ItemStack.of(Material.AIR);
                 inventory.setItem(item.slot(), itemStack);
             }
+            case EmptySlotsWidget empty -> occupiedSlots.addAll(empty.slots());
         }
     }
 
@@ -432,6 +434,7 @@ public class MenuService {
 
                 event.setCancelled(true);
             }
+            case EmptySlotsWidget _ -> event.setCancelled(true);
         }
     }
 
@@ -462,6 +465,11 @@ public class MenuService {
                 }
                 case ItemSlotSupplierWidget item -> {
                     if (item.slot() == slot) return item;
+                }
+                case EmptySlotsWidget empty -> {
+                    for (int possibleSlot : empty.slots()) {
+                        if (possibleSlot == slot) return empty;
+                    }
                 }
             }
         }
