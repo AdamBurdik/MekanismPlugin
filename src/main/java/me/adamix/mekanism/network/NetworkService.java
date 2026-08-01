@@ -3,9 +3,13 @@ package me.adamix.mekanism.network;
 import lombok.RequiredArgsConstructor;
 import me.adamix.mekanism.block.BlockInstance;
 import me.adamix.mekanism.block.MekanismBlockType;
+import me.adamix.mekanism.block.component.item.ItemComponent;
+import me.adamix.mekanism.block.source.ComponentSource;
 import me.adamix.mekanism.block.component.network.EnergyComponent;
 import me.adamix.mekanism.block.component.network.TransporterComponent;
+import me.adamix.mekanism.block.instance.BlockInstanceService;
 import me.adamix.mekanism.block.persistence.BlockPersistenceService;
+import me.adamix.mekanism.block.source.VanillaContainerSource;
 import me.adamix.mekanism.network.port.NetworkPort;
 import me.adamix.mekanism.network.port.PortType;
 import me.adamix.mekanism.type.BlockPos;
@@ -14,7 +18,9 @@ import me.adamix.mekanism.type.WorldPos;
 import me.adamix.utils.BlockUtils;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.Container;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.util.ArrayDeque;
@@ -35,7 +41,9 @@ public class NetworkService {
     private final Map<UUID, AbstractNetwork> networksById = new HashMap<>();
     private final Map<WorldPos, UUID> transporterToId = new HashMap<>();
     private final Map<WorldPos, Map<BlockFace, NetworkPort>> portsOf = new HashMap<>();
+    private final Map<WorldPos, Map<BlockFace, UUID>> externalPorts = new HashMap<>();
     private final BlockPersistenceService blockPersistenceService;
+    private final BlockInstanceService instanceService;
 
     public @NotNull Optional<AbstractNetwork> getNetwork(@NotNull WorldPos pos, @NotNull BlockFace face) {
         UUID networkId = null;
@@ -49,6 +57,10 @@ public class NetworkService {
                 networkId = ports.getNetworkId();
             }
         }
+        if (externalPorts.containsKey(pos)) {
+            networkId = externalPorts.get(pos)
+                    .get(face);
+        }
 
         if (networkId == null) {
             return Optional.empty();
@@ -61,6 +73,7 @@ public class NetworkService {
         UUID id = UUID.randomUUID();
         AbstractNetwork network = switch (type) {
             case ENERGY -> new EnergyNetwork(id, worldName);
+            case ITEM -> new ItemNetwork(id, worldName);
         };
 
         networksById.put(id, network);
@@ -112,26 +125,30 @@ public class NetworkService {
             @NotNull AbstractNetwork networkA,
             @NotNull AbstractNetwork networkB
     ) {
-        networkA.getTransporters().addAll(networkB.getTransporters());
-        networkA.getConsumers().addAll(networkB.getConsumers());
-        networkA.getProducers().addAll(networkB.getProducers());
+        networkA.getConsumers().putAll(networkB.getConsumers());
+        networkA.getProducers().putAll(networkB.getProducers());
         for (BlockPos cable : networkB.getTransporters()) {
             transporterToId.put(cable.withWorld(networkA.getWorldName()), networkA.getId());
         }
 
-        for (NetworkPort consumer : networkB.getConsumers()) {
+        for (NetworkPort consumer : networkB.getConsumers().values()) {
             consumer.setNetworkId(networkA.getId());
         }
-        for (NetworkPort producer : networkB.producers) {
+        for (NetworkPort producer : networkB.getProducers().values()) {
             producer.setNetworkId(networkA.getId());
         }
 
         networksById.remove(networkB.getId());
 
+        networkA.update();
         log.info("Merged networks: {} and {}", networkA.getId(), networkB.getId());
     }
 
     public @NotNull NetworkContext scanSurroundings(@NotNull WorldPos pos) {
+        return scanSurroundings(pos, null);
+    }
+
+    public @NotNull NetworkContext scanSurroundings(@NotNull WorldPos pos, @Nullable NetworkType type) {
         Map<BlockFace, AbstractNetwork> map = new HashMap<>();
 
         for (Tuple<WorldPos, BlockFace> tuple : BlockUtils.getSurroundings(pos)) {
@@ -147,8 +164,11 @@ public class NetworkService {
 
                 if (ports.containsKey(face.getOppositeFace())) {
                     networkId = ports.get(face.getOppositeFace())
-                        .getNetworkId();
+                            .getNetworkId();
                 }
+            } else if (externalPorts.containsKey(surrounding)) {
+                var ports = externalPorts.get(surrounding);
+                networkId = ports.get(face.getOppositeFace());
             }
 
             if (networkId == null) continue;
@@ -158,6 +178,8 @@ public class NetworkService {
                 log.error("Surrounding block has network id that does not exist in network map. Maybe zombie block?");
                 continue;
             }
+
+            if (type != null && network.type() != type) continue;
 
             map.put(tuple.right(), network);
         }
@@ -183,6 +205,12 @@ public class NetworkService {
                     .orElseThrow();
 
             registerPorts(WorldPos.of(block), NetworkType.ENERGY, instance, component.getPorts());
+        }
+        if (instance.has(ItemComponent.class)) {
+            var component = instance.get(ItemComponent.class)
+                    .orElseThrow();
+
+            registerPorts(WorldPos.of(block), NetworkType.ITEM, instance, component.getPorts());
         }
     }
 
@@ -253,6 +281,10 @@ public class NetworkService {
             } else if (portType == PortType.OUTPUT) {
                 network.addProducer(port);
             }
+            if (portType == PortType.BOTH) {
+                network.addConsumer(port);
+                network.addProducer(port);
+            }
 
             faceToId.put(face, port);
         });
@@ -278,11 +310,22 @@ public class NetworkService {
             if (portType == PortType.OUTPUT) {
                 network.addProducer(port);
             }
+            if (portType == PortType.BOTH) {
+                network.addConsumer(port);
+                network.addProducer(port);
+            }
 
             faceToId.put(face, port);
         });
 
-        portsOf.put(pos, faceToId);
+        var registryPorts = portsOf.computeIfAbsent(pos, _ -> new HashMap<>());
+
+        faceToId.forEach((face, port) -> {
+//            if (registryPorts.containsKey(face)) {
+//                throw new IllegalStateException("Trying to register port for block with already registered port for " + face);
+//            }
+            registryPorts.put(face, port);
+        });
     }
 
     private void registerTransporter(
@@ -293,18 +336,20 @@ public class NetworkService {
     ) {
         WorldPos pos = WorldPos.of(block);
 
-        NetworkContext networkContext = scanSurroundings(pos);
+        NetworkContext networkContext = scanSurroundings(pos, component.type());
         Map<BlockFace, AbstractNetwork> map = networkContext.networkMap();
         var surroundingNetworks = new HashSet<>(map.values());
 
+        AbstractNetwork network;
+
         if (surroundingNetworks.isEmpty()) {
             // Create new network
-            AbstractNetwork network = createNetwork(component.type(), block.getWorld().getName());
+            network = createNetwork(component.type(), block.getWorld().getName());
             network.addTransporter(block);
             transporterToId.put(pos, network.getId());
         } else if (surroundingNetworks.size() == 1) {
             // Join this network
-            var network = map.values()
+            network = map.values()
                     .stream()
                     .findFirst()
                     .orElseThrow();
@@ -314,7 +359,7 @@ public class NetworkService {
             log.info("Added cable to network: {}", network.id);
         } else {
             // Merge networks
-            var network = map.values()
+            network = map.values()
                     .stream()
                     .findFirst()
                     .orElseThrow();
@@ -326,6 +371,45 @@ public class NetworkService {
             network.addTransporter(block);
             transporterToId.put(pos, network.getId());
         }
+
+        // Register external ports
+        for (Tuple<WorldPos, BlockFace> surrounding : BlockUtils.getSurroundings(pos)) {
+            WorldPos surroundingPos = surrounding.left();
+            BlockFace face = surrounding.right();
+
+            if (transporterToId.containsKey(surroundingPos)) continue;
+
+            // Only register externals for specific blocks.
+            // TODO Some better way to register them, not by this check
+            if (type == MekanismBlockType.BASIC_LOGISTICAL_TRANSPORTER) {
+                Optional<ComponentSource> source = resolveSource(surroundingPos, NetworkType.ITEM);
+                source.ifPresent(src -> {
+                    NetworkPort port = new NetworkPort(
+                            surroundingPos.block(), surroundingPos.worldName(),
+                            face.getOppositeFace(), PortType.INPUT, src, network.getId()
+                    );
+                    network.addConsumer(port);
+                    externalPorts.computeIfAbsent(surroundingPos, _ -> new HashMap<>())
+                            .put(face.getOppositeFace(), network.getId());
+                });
+            }
+        }
+    }
+
+    private @NotNull Optional<ComponentSource> resolveSource(@NotNull WorldPos pos, @NotNull NetworkType type) {
+        Optional<BlockInstance> own = instanceService.get(pos);
+        if (own.isPresent()) {
+            return Optional.of(own.get());
+        }
+
+        if (type == NetworkType.ITEM) {
+            Block block = pos.resolveBlock();
+            if (block.getState() instanceof Container container) {
+                return Optional.of(new VanillaContainerSource(container.getInventory()));
+            }
+        }
+
+        return Optional.empty();
     }
 
     public void updateBlock(@NotNull Block location) {
@@ -334,11 +418,9 @@ public class NetworkService {
 
     public void tick() {
         for (AbstractNetwork network : networksById.values()) {
-            if (network instanceof EnergyNetwork energyNetwork) {
-                var touched = energyNetwork.tick();
-                if (touched != null) {
-                    touched.forEach(blockPersistenceService::markDirty);
-                }
+            var touched = network.tick();
+            if (touched != null) {
+                touched.forEach(blockPersistenceService::markDirty);
             }
             // if (network instanceof ItemNetwork itemNetwork) { tickItemNetwork(itemNetwork); }
         }

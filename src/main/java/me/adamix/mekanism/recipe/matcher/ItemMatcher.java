@@ -5,4 +5,6 @@ import org.jetbrains.annotations.NotNull;
 
 public interface ItemMatcher {
     boolean matches(@NotNull ItemStack stack);
+
+    ItemMatcher ANY = _ -> true;
 }

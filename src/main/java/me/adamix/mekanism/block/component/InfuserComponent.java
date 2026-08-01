@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import me.adamix.mekanism.block.BlockInstance;
 import me.adamix.mekanism.block.component.item.GenericSlotsComponent;
+import me.adamix.mekanism.block.component.item.ItemComponent;
 import me.adamix.mekanism.block.component.network.EnergyComponent;
 import me.adamix.mekanism.infusion.InfusionMapping;
 import me.adamix.mekanism.infusion.InfusionStorage;
@@ -13,6 +14,7 @@ import me.adamix.mekanism.infusion.InfusionTypeRegistry;
 import me.adamix.mekanism.network.port.PortType;
 import me.adamix.mekanism.recipe.RecipeRegistry;
 import me.adamix.mekanism.recipe.infuser.InfuserRecipe;
+import me.adamix.mekanism.recipe.matcher.ItemMatcher;
 import me.adamix.utils.ItemUtils;
 import org.bukkit.block.BlockFace;
 import org.bukkit.inventory.ItemStack;
@@ -26,14 +28,14 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Getter
 @ToString
-public class InfuserComponent implements Component, TickableComponent, GenericSlotsComponent {
+public class InfuserComponent implements Component, TickableComponent, GenericSlotsComponent, ItemComponent {
     private static final long ENERGY_PER_TICK = 20;
 
     private final @NotNull Map<BlockFace, PortType> ports;
     private final @NotNull InfusionStorage storage;
     private final InfusionTypeRegistry infusionTypeRegistry;
     private final RecipeRegistry recipeRegistry;
-    private final ItemStack[] slots = new ItemStack[3]; // Main, Infusion, Output
+    private final @Nullable ItemStack[] slots = new ItemStack[3]; // Main, Infusion, Output
     private int progress = 0;
     private int maxProgress = 0;
 
@@ -161,5 +163,44 @@ public class InfuserComponent implements Component, TickableComponent, GenericSl
             reduced.setAmount(reduced.getAmount() - 1);
             slots[1] = reduced.getAmount() == 0 ? null : reduced;
         }
+    }
+
+    @Override
+    public @Nullable ItemStack insert(@NotNull ItemStack item, @NotNull BlockFace side, boolean simulate) {
+        return null;
+    }
+
+    @Override
+    public @Nullable ItemStack extract(
+            @NotNull ItemMatcher matcher,
+            @NotNull BlockFace side,
+            int amount,
+            boolean simulate
+    ) {
+        ItemStack output = slots[2];
+        if (output == null) return null;
+
+        if (output.getAmount() <= amount) {
+            if (simulate) {
+                slots[2] = null;
+            }
+
+            return output;
+        }
+
+        ItemStack extracted = output.clone();
+        extracted.setAmount(amount);
+
+        if (simulate) {
+            int newAmount = output.getAmount() - amount;
+            output.setAmount(newAmount);
+        }
+
+        return extracted;
+    }
+
+    @Override
+    public @NotNull ItemMatcher getAcceptedMatcher(@NotNull BlockFace side) {
+        return _ -> false;
     }
 }

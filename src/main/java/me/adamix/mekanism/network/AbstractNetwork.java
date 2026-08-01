@@ -11,7 +11,10 @@ import org.bukkit.block.BlockFace;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -23,8 +26,8 @@ public abstract class AbstractNetwork {
     protected final @NotNull UUID id;
     protected final @NotNull String worldName;
     protected final Set<BlockPos> transporters = new HashSet<>();
-    protected final Set<NetworkPort> consumers = new HashSet<>();
-    protected final Set<NetworkPort> producers = new HashSet<>();
+    protected final Map<BlockPos, NetworkPort> consumers = new HashMap<>();
+    protected final Map<BlockPos, NetworkPort> producers = new HashMap<>();
 
     public abstract @NotNull NetworkType type();
 
@@ -45,31 +48,67 @@ public abstract class AbstractNetwork {
     public void addConsumer(
             @NotNull NetworkPort consumer
     ) {
-        consumers.add(consumer);
+        consumers.put(consumer.getPos(), consumer);
     }
 
     public void removeConsumer(
             @NotNull NetworkPort consumer
     ) {
-        consumers.remove(consumer);
+        consumers.remove(consumer.getPos());
     }
 
     public void addProducer(
             @NotNull NetworkPort producer
     ) {
-        producers.add(producer);
+        producers.put(producer.getPos(), producer);
     }
 
     public void removeProducer(
             @NotNull NetworkPort producer
     ) {
-        producers.remove(producer);
+        producers.remove(producer.getPos());
     }
 
     public void removeTransporter(@NotNull Block block) {
         transporters.remove(block.getLocation());
     }
 
+    public void update() {
+
+    }
+
+    public @NotNull Set<BlockPos> getSurrounding(@NotNull BlockPos pos) {
+        Set<BlockPos> neighbors = new HashSet<>();
+
+        for (BlockFace face : CARDINAL_DIRECTIONS) {
+            BlockPos neighbor = pos.offset(
+                    face.getModX(),
+                    face.getModY(),
+                    face.getModZ()
+            );
+            if (
+                    consumers.containsKey(neighbor) ||
+                            producers.containsKey(neighbor) ||
+                            transporters.contains(neighbor)
+            ) {
+                neighbors.add(neighbor);
+            }
+        }
+
+        return neighbors;
+    }
+
+    public boolean isNetworkPort(@NotNull BlockPos pos) {
+        return consumers.containsKey(pos) || producers.containsKey(pos);
+    }
+
+    public @Nullable NetworkPort getNetworkPortAt(@NotNull BlockPos pos) {
+        if (consumers.containsKey(pos)) return consumers.get(pos);
+        if (producers.containsKey(pos)) return producers.get(pos);
+        return null;
+    }
+
+    @Deprecated
     public @NotNull Set<BlockFace> getSurroundingFaces(@NotNull Location location) {
         Set<BlockFace> neighbors = new HashSet<>();
 
@@ -82,6 +121,7 @@ public abstract class AbstractNetwork {
         return neighbors;
     }
 
+    @Deprecated
     public @NotNull Set<Location> getSurrounding(@NotNull Location location) {
         Set<Location> neighbors = new HashSet<>();
 

@@ -16,6 +16,7 @@ import me.adamix.mekanism.block.component.network.TransporterComponent;
 import me.adamix.mekanism.block.handler.EnergyCubeHandler;
 import me.adamix.mekanism.block.handler.GenericBlockHandler;
 import me.adamix.mekanism.block.handler.SolarGeneratorHandler;
+import me.adamix.mekanism.block.handler.TransporterBlockHandler;
 import me.adamix.mekanism.block.handler.UniversalCableHandler;
 import me.adamix.mekanism.block.instance.BlockInstanceService;
 import me.adamix.mekanism.block.persistence.BlockPersistenceService;
@@ -116,7 +117,8 @@ public final class Mekanism extends JavaPlugin {
         PortType current = energy.getPorts().get(face);
         PortType next = switch (current) {
             case INPUT -> PortType.OUTPUT;
-            case OUTPUT -> PortType.DISABLED;
+            case OUTPUT -> PortType.BOTH;
+            case BOTH -> PortType.DISABLED;
             case DISABLED -> PortType.INPUT;
             case null -> PortType.INPUT;
         };
@@ -199,6 +201,18 @@ public final class Mekanism extends JavaPlugin {
                         block -> new TransporterComponent(NetworkType.ENERGY)
                 ),
                 new UniversalCableHandler(),
+                null
+        ));
+
+        registry.register(MekanismBlockType.BASIC_LOGISTICAL_TRANSPORTER, new BlockDefinition(
+                Material.CONDUIT,
+                conduitBlockData,
+                "logistical_transporter/basic",
+                cableTransformation,
+                List.of(
+                        block -> new TransporterComponent(NetworkType.ITEM)
+                ),
+                new TransporterBlockHandler(NetworkType.ITEM),
                 null
         ));
 
@@ -306,12 +320,14 @@ public final class Mekanism extends JavaPlugin {
                         case INPUT -> "Input";
                         case OUTPUT -> "Output";
                         case DISABLED -> "None";
+                        case BOTH -> "Both";
                     };
 
                     String slotTypeName = switch (portType) {
                         case INPUT -> "Blue";
                         case OUTPUT -> "Dark Red";
                         case DISABLED -> "Light Gray";
+                        case BOTH -> "Blue";
                     };
 
                     return portName + " (" + slotTypeName + ") (" + side + ")";
@@ -500,7 +516,7 @@ public final class Mekanism extends JavaPlugin {
                                         BlockFace.DOWN, PortType.OUTPUT
                                 ),
                                 new EnergyStorage(3840, 0, 20, 0),
-                                20
+                                17
                         )
                 ),
                 new SolarGeneratorHandler(),
@@ -550,13 +566,27 @@ public final class Mekanism extends JavaPlugin {
                 fullBlockTransformation,
                 List.of(
                         block -> new EnergyComponent(
-                                portsSupplier.get(),
+                                new HashMap<>(Map.of(
+                                        BlockFace.SOUTH, PortType.DISABLED,
+                                        BlockFace.NORTH, PortType.DISABLED,
+                                        BlockFace.EAST, PortType.DISABLED,
+                                        BlockFace.WEST, PortType.DISABLED,
+                                        BlockFace.UP, PortType.DISABLED,
+                                        BlockFace.DOWN, PortType.INPUT
+                                )),
                                 new EnergyStorage(
                                         8000, 100, 100, 0
                                 )
                         ),
                         block -> new InfuserComponent(
-                                portsSupplier.get(),
+                                new HashMap<>(Map.of(
+                                        BlockFace.SOUTH, PortType.OUTPUT,
+                                        BlockFace.NORTH, PortType.INPUT,
+                                        BlockFace.EAST, PortType.DISABLED,
+                                        BlockFace.WEST, PortType.DISABLED,
+                                        BlockFace.UP, PortType.DISABLED,
+                                        BlockFace.DOWN, PortType.DISABLED
+                                )),
                                 new InfusionStorage(
                                         null, 0, 1000
                                 ),
@@ -751,7 +781,7 @@ public final class Mekanism extends JavaPlugin {
         infusionTypeRegistry.register(new InfusionMapping(new MaterialMatcher(Material.REDSTONE), InfusionType.REDSTONE, 10));
 
         BlockTickService blockTickService = new BlockTickService(blockPersistenceService);
-        networkService = new NetworkService(getSLF4JLogger(), blockPersistenceService);
+        networkService = new NetworkService(getSLF4JLogger(), blockPersistenceService, blockInstanceService);
         BlockService blockService = new BlockService(blockRegistry, blockPersistenceService);
 
         blockFacade = new BlockFacade(

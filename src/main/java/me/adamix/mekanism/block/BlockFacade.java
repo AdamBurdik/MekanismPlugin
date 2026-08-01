@@ -56,7 +56,17 @@ public class BlockFacade {
         // 4. Save block instance
         // TODO Save the instance somewhere, like BlockInstanceService
 
-        // 5. Spawn entity
+        // 5. Register block to network
+        networkService.registerBlock(
+                block,
+                type,
+                instance
+        );
+
+        // 6. Rescan for network, due to external may be registered
+        networkContext = networkService.scanSurroundings(pos);
+
+        // 7. Spawn entity
         blockService.spawnEntity(
                 block,
                 type,
@@ -66,12 +76,6 @@ public class BlockFacade {
 
         blockService.saveToChunkPdc(pos);
 
-        // 6. Register block to network
-        networkService.registerBlock(
-                block,
-                type,
-                instance
-        );
 
         // 7. Update surrounding blocks
         updateSurroundings(block);
@@ -93,6 +97,8 @@ public class BlockFacade {
         if (instance.isEmpty()) return;
 
         NetworkContext networkContext = networkService.scanSurroundings(location);
+        System.out.println("Updating " + location.block());
+        System.out.println("Networks found: " + networkContext.networkMap());
 
 
         blockService.updateBlock(

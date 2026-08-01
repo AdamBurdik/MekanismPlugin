@@ -47,6 +47,7 @@ public class DebugCommand implements BasicCommand {
         var network = opt.get();
         player.sendMessage("===================");
         player.sendMessage("Network id: " + network.getId());
+        player.sendMessage("Network type: " + network.type());
         player.sendMessage("===================");
     }
 

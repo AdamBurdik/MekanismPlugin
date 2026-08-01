@@ -11,7 +11,7 @@ import static org.junit.Assert.assertTrue;
 
 public class NetworkServiceTest {
 
-    private final NetworkService service = new NetworkService(null);
+    private final NetworkService service = new NetworkService(null, null, null);
 
     @Test
     public void getSurroundingReturnsAllNeighbors() {

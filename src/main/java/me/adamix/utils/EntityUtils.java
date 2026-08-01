@@ -52,4 +52,13 @@ public class EntityUtils {
                 }
         );
     }
+
+    public static void updateEntity(
+            @NotNull ItemDisplay entity,
+            @NotNull BlockDefinition definition,
+            @NotNull CustomModelData customModelData
+    ) {
+        entity.setItemStack(createItem(definition.itemModel(), customModelData));
+        entity.setTransformation(definition.transformation());
+    }
 }

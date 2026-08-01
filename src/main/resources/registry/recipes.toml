@@ -1,0 +1,12 @@
+[[recipes]]
+type = "infusing"
+main = "iron_ingot"
+infusion = { type = "CARBON", amount = 10 }
+ouput = "mekanism:enriched_iron"
+
+[[recipes]]
+type = "infusing"
+main = "mekanism:enriched_iron"
+infusion = { type = "CARBON", amount = 10 }
+ouput = "mekanism:steel_dust"
+

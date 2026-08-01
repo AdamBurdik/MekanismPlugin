@@ -2,8 +2,8 @@ package me.adamix.mekanism.block;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import me.adamix.mekanism.block.component.Component;
+import me.adamix.mekanism.block.source.ComponentSource;
 import me.adamix.mekanism.data.MekanismKeys;
 import me.adamix.mekanism.type.WorldPos;
 import org.bukkit.block.BlockFace;
@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 @AllArgsConstructor
-public class BlockInstance {
+public class BlockInstance implements ComponentSource {
     @Getter
     private final WorldPos pos;
     private final List<Component> components = new ArrayList<>();
@@ -27,7 +27,8 @@ public class BlockInstance {
         components.add(component);
     }
 
-    public <T extends Component> Optional<T> get(Class<T> type) {
+    @Override
+    public <T extends Component> Optional<T> get(@NotNull Class<T> type) {
         return components.stream()
                 .filter(type::isInstance)
                 .map(type::cast)

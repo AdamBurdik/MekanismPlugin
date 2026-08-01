@@ -7,6 +7,8 @@ public enum MekanismBlockType {
     ELITE_UNIVERSAL_CABLE,
     ULTIMATE_UNIVERSAL_CABLE,
 
+    BASIC_LOGISTICAL_TRANSPORTER,
+
     // Energy storage
     BASIC_ENERGY_CUBE,
 

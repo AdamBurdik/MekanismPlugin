@@ -30,10 +30,10 @@ public class EnergyNetwork extends AbstractNetwork {
 
     @Override
     public @Nullable Set<WorldPos> tick() {
-        List<NetworkPort> producers = this.producers.stream()
+        List<NetworkPort> producers = this.producers.values().stream()
                 //            .filter(port -> port.getLocation().getChunk().isLoaded())
                 .toList();
-        List<NetworkPort> consumers = this.consumers.stream()
+        List<NetworkPort> consumers = this.consumers.values().stream()
                 //            .filter(port -> port.getLocation().getChunk().isLoaded())
                 .toList();
         if (producers.isEmpty() || consumers.isEmpty()) return null;

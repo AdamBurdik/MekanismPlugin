@@ -1,0 +1,9 @@
+[[items]]
+id = "enriched_iron"
+material = "paper"
+item_model = "mekanism:materials/enriched_iron"
+
+[[items]]
+id = "steel_dust"
+material = "paper"
+item_model = "mekanism:materials/steel_dust"

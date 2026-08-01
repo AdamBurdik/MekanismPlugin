@@ -2,7 +2,8 @@ package me.adamix.mekanism.network.port;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import me.adamix.mekanism.block.BlockInstance;
+import me.adamix.mekanism.block.component.item.ItemComponent;
+import me.adamix.mekanism.block.source.ComponentSource;
 import me.adamix.mekanism.block.component.network.EnergyComponent;
 import me.adamix.mekanism.type.BlockPos;
 import org.bukkit.block.BlockFace;
@@ -18,10 +19,14 @@ public class NetworkPort {
     private final @NotNull String worldName;
     private final @NotNull BlockFace blockFace;
     private final @NotNull PortType portType;
-    private final @NotNull BlockInstance blockInstance;
+    private final @NotNull ComponentSource source;
     private @NotNull UUID networkId;
 
     public @NotNull Optional<EnergyComponent> getEnergyComponent() {
-        return blockInstance.get(EnergyComponent.class);
+        return source.get(EnergyComponent.class);
+    }
+
+    public @NotNull Optional<ItemComponent> getItemComponent() {
+        return source.get(ItemComponent.class);
     }
 }
