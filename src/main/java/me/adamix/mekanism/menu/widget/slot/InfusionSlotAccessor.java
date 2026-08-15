@@ -21,6 +21,11 @@ public record InfusionSlotAccessor(
 
     @Override
     public boolean canAccept(@NotNull ItemStack item) {
+        ItemStack current = get();
+        if (current == null) return true;
+        if (current.getType() != item.getType()) return false;
+        if (current.getAmount() >= current.getMaxStackSize()) return false;
+
         return true;
     }
 }

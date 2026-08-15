@@ -4,11 +4,11 @@ import lombok.RequiredArgsConstructor;
 import me.adamix.mekanism.block.BlockInstance;
 import me.adamix.mekanism.block.MekanismBlockType;
 import me.adamix.mekanism.block.component.item.ItemComponent;
-import me.adamix.mekanism.block.source.ComponentSource;
 import me.adamix.mekanism.block.component.network.EnergyComponent;
 import me.adamix.mekanism.block.component.network.TransporterComponent;
 import me.adamix.mekanism.block.instance.BlockInstanceService;
 import me.adamix.mekanism.block.persistence.BlockPersistenceService;
+import me.adamix.mekanism.block.source.ComponentSource;
 import me.adamix.mekanism.block.source.VanillaContainerSource;
 import me.adamix.mekanism.network.port.NetworkPort;
 import me.adamix.mekanism.network.port.PortType;
@@ -31,6 +31,7 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static me.adamix.utils.BlockUtils.CARDINAL_DIRECTIONS;
 import static me.adamix.utils.Utils.todo;
@@ -38,10 +39,10 @@ import static me.adamix.utils.Utils.todo;
 @RequiredArgsConstructor
 public class NetworkService {
     private final Logger log;
-    private final Map<UUID, AbstractNetwork> networksById = new HashMap<>();
-    private final Map<WorldPos, UUID> transporterToId = new HashMap<>();
-    private final Map<WorldPos, Map<BlockFace, NetworkPort>> portsOf = new HashMap<>();
-    private final Map<WorldPos, Map<BlockFace, UUID>> externalPorts = new HashMap<>();
+    private final Map<UUID, AbstractNetwork> networksById = new ConcurrentHashMap<>();
+    private final Map<WorldPos, UUID> transporterToId = new ConcurrentHashMap<>();
+    private final Map<WorldPos, Map<BlockFace, NetworkPort>> portsOf = new ConcurrentHashMap<>();
+    private final Map<WorldPos, Map<BlockFace, UUID>> externalPorts = new ConcurrentHashMap<>();
     private final BlockPersistenceService blockPersistenceService;
     private final BlockInstanceService instanceService;
 
@@ -384,11 +385,13 @@ public class NetworkService {
             if (type == MekanismBlockType.BASIC_LOGISTICAL_TRANSPORTER) {
                 Optional<ComponentSource> source = resolveSource(surroundingPos, NetworkType.ITEM);
                 source.ifPresent(src -> {
+                    // Not sure if sharing 1 port for producer and consumer is good idea.
                     NetworkPort port = new NetworkPort(
                             surroundingPos.block(), surroundingPos.worldName(),
-                            face.getOppositeFace(), PortType.INPUT, src, network.getId()
+                            face.getOppositeFace(), PortType.BOTH, src, network.getId()
                     );
                     network.addConsumer(port);
+                    network.addProducer(port);
                     externalPorts.computeIfAbsent(surroundingPos, _ -> new HashMap<>())
                             .put(face.getOppositeFace(), network.getId());
                 });

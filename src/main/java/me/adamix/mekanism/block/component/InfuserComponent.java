@@ -16,6 +16,7 @@ import me.adamix.mekanism.recipe.RecipeRegistry;
 import me.adamix.mekanism.recipe.infuser.InfuserRecipe;
 import me.adamix.mekanism.recipe.matcher.ItemMatcher;
 import me.adamix.utils.ItemUtils;
+import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -166,8 +167,54 @@ public class InfuserComponent implements Component, TickableComponent, GenericSl
     }
 
     @Override
-    public @Nullable ItemStack insert(@NotNull ItemStack item, @NotNull BlockFace side, boolean simulate) {
-        return null;
+    public @Nullable ItemStack insert(@NotNull ItemStack stack, @NotNull BlockFace side, boolean simulate) {
+        if (stack.getType() == Material.IRON_INGOT) {
+            return insertIntoSlot(getMainSlot(), stack, this::setMainSlot, simulate);
+        } else if (stack.getType() == Material.COAL) {
+            return insertIntoSlot(getInfusionSlot(), stack, this::setInfusionSlot, simulate);
+        }
+
+        return stack;
+    }
+
+    private @Nullable ItemStack insertIntoSlot(
+            @Nullable ItemStack current,
+            @NotNull ItemStack stack,
+            java.util.function.Consumer<ItemStack> setter,
+            boolean simulate
+    ) {
+        if (current != null && !current.isSimilar(stack)) {
+            return stack;
+        }
+
+        int currentAmount = (current == null) ? 0 : current.getAmount();
+        int maxStackSize = current != null ? current.getMaxStackSize() : stack.getMaxStackSize();
+        int spaceAvailable = maxStackSize - currentAmount;
+
+        if (spaceAvailable <= 0) {
+            return stack;
+        }
+
+        int insertedAmount = Math.min(stack.getAmount(), spaceAvailable);
+        int remainingAmount = stack.getAmount() - insertedAmount;
+
+        if (!simulate) {
+            if (current == null) {
+                ItemStack newStack = stack.clone();
+                newStack.setAmount(insertedAmount);
+                setter.accept(newStack);
+            } else {
+                current.setAmount(currentAmount + insertedAmount);
+            }
+        }
+
+        if (remainingAmount <= 0) {
+            return null;
+        }
+
+        ItemStack remaining = stack.clone();
+        remaining.setAmount(remainingAmount);
+        return remaining;
     }
 
     @Override
@@ -181,7 +228,7 @@ public class InfuserComponent implements Component, TickableComponent, GenericSl
         if (output == null) return null;
 
         if (output.getAmount() <= amount) {
-            if (simulate) {
+            if (!simulate) {
                 slots[2] = null;
             }
 
@@ -191,7 +238,7 @@ public class InfuserComponent implements Component, TickableComponent, GenericSl
         ItemStack extracted = output.clone();
         extracted.setAmount(amount);
 
-        if (simulate) {
+        if (!simulate) {
             int newAmount = output.getAmount() - amount;
             output.setAmount(newAmount);
         }
@@ -201,6 +248,7 @@ public class InfuserComponent implements Component, TickableComponent, GenericSl
 
     @Override
     public @NotNull ItemMatcher getAcceptedMatcher(@NotNull BlockFace side) {
-        return _ -> false;
+        // TODO Make it actually good matcher
+        return stack -> stack.getType() == Material.IRON_INGOT || stack.getType() == Material.COAL;
     }
 }

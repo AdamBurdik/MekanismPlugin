@@ -13,5 +13,5 @@ public record IndicatorWidget(
         int rowCount,
         @NotNull Function<BlockInstance, Double> valueProvider,
         @Nullable Function<BlockInstance, String> labelProvider,
-        @NotNull List<List<ItemStack>> frames
+        @NotNull ItemStack[][] frames
 ) implements WidgetDefinition {}

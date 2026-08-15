@@ -20,7 +20,6 @@ import me.adamix.mekanism.type.pdc.StoredBlockListDataType;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -42,6 +41,8 @@ public class ChunkListener implements Listener {
     @EventHandler
     public void onChunkLoad(@NotNull ChunkLoadEvent event) {
         var pdc = event.getChunk().getPersistentDataContainer();
+
+        System.out.println("Chunk loaded: x: " + event.getChunk().getX() + ", z: " + event.getChunk().getZ());
 
         List<StoredBlock> storedBlocks = pdc.get(MekanismKeys.CHUNK_BLOCKS_KEY, StoredBlockListDataType.INSTANCE);
         if (storedBlocks == null) return;

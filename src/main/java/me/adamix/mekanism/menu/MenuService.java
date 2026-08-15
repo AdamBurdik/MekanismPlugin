@@ -247,13 +247,13 @@ public class MenuService {
             if (slot == widget.sourceSlot()) {
                 var frames = widget.frames();
 
-                int frameIndex = (int) (value * frames.size());
+                int frameIndex = (int) (value * frames.length);
 
-                if (frameIndex >= frames.size()) {
-                    frameIndex = frames.size() - 1;
+                if (frameIndex >= frames.length) {
+                    frameIndex = frames.length - 1;
                 }
 
-                item = frames.get(frameIndex);
+                item = frames[frameIndex];
             } else {
                 item = ItemStack.of(Material.PAPER);
             }
@@ -296,11 +296,11 @@ public class MenuService {
             for (int x = 0; x < columns; x++) {
 
                 int i = y * columns + x;
-                var frames = widget.frames().get(i);
+                var frames = widget.frames()[i];
 
-                int frameIndex = (int) Math.round(pct * (frames.size() - 1));
+                int frameIndex = (int) Math.round(pct * (frames.length - 1));
 
-                ItemStack item = frames.get(frameIndex);
+                ItemStack item = frames[frameIndex];
 
                 if (widget.labelProvider() != null) {
                     item.editMeta(meta -> {
@@ -427,9 +427,23 @@ public class MenuService {
                         event.setCancelled(true);
                         return;
                     }
-                    accessor.set(cursor.clone());
-                    event.setCurrentItem(cursor.clone());
-                    player.setItemOnCursor(null);
+                    if (current == null) {
+                        accessor.set(cursor.clone());
+                        event.setCurrentItem(cursor.clone());
+                        player.setItemOnCursor(null);
+                    } else {
+                        int currentAmount = current.getAmount();
+                        int newAmount = Math.min(current.getMaxStackSize(), cursor.getAmount() + currentAmount);
+                        int inserted = newAmount - currentAmount;
+                        ItemStack newItem = cursor.clone();
+                        newItem.setAmount(newAmount);
+                        accessor.set(newItem);
+
+                        event.setCurrentItem(newItem);
+                        ItemStack newCursor = cursor.clone();
+                        newCursor.setAmount(cursor.getAmount() - inserted);
+                        player.setItemOnCursor(newCursor);
+                    }
                 }
 
                 event.setCancelled(true);

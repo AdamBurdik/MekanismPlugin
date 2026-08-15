@@ -14,5 +14,5 @@ public record MultiSlotIndicatorWidget(
         int rowCount,
         @NotNull Function<BlockInstance, Double> valueProvider,
         @Nullable Function<BlockInstance, String> labelProvider,
-        @NotNull List<ItemStack> frames
+        @NotNull ItemStack[] frames
 ) implements WidgetDefinition {}

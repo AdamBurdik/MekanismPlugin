@@ -135,13 +135,13 @@ public class ItemNetwork extends AbstractNetwork {
                 );
                 if (extracted == null) continue;
 
-                ItemStack inserted = consumerComponent.insert(
+                ItemStack remaining = consumerComponent.insert(
                         extracted,
                         consumer.getBlockFace(),
                         false
                 );
 
-                int insertedAmount = inserted == null ? transferRatePool : extracted.getAmount() - inserted.getAmount();
+                int insertedAmount = remaining == null ? extracted.getAmount() : extracted.getAmount() - remaining.getAmount();
 
                 if (insertedAmount > 0) {
                     producerComponent.extract(

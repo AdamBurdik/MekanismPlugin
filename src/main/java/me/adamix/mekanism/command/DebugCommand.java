@@ -5,6 +5,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import lombok.RequiredArgsConstructor;
 import me.adamix.mekanism.block.component.Component;
 import me.adamix.mekanism.block.instance.BlockInstanceService;
+import me.adamix.mekanism.network.AbstractNetwork;
 import me.adamix.mekanism.network.NetworkService;
 import me.adamix.mekanism.type.WorldPos;
 import org.bukkit.block.Block;
@@ -49,6 +50,8 @@ public class DebugCommand implements BasicCommand {
         player.sendMessage("Network id: " + network.getId());
         player.sendMessage("Network type: " + network.type());
         player.sendMessage("===================");
+
+        networkInfo(player, network);
     }
 
     private void instance(@NotNull Player player) {
@@ -70,5 +73,12 @@ public class DebugCommand implements BasicCommand {
         for (Component component : instance.components()) {
             player.sendMessage(" - " + component.toString());
         }
+    }
+
+    private void networkInfo(@NotNull Player player, @NotNull AbstractNetwork network){
+        player.sendMessage("===================");
+        player.sendMessage("Producers: (" + network.getProducers().size() + ") " + network.getProducers().keySet());
+        player.sendMessage("Consumers: (" + network.getConsumers().size() + ") " + network.getConsumers().keySet());
+        player.sendMessage("===================");
     }
 }

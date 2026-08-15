@@ -4,35 +4,35 @@
 			"type": "bitmap",
 			"ascent": 13,
 			"height": 93,
-			"chars": ["\uFF00"],
+			"chars": ["\uEE00"],
 			"file": "mekanism:gui/energy_cube.png"
 		},
 		{
 			"type": "bitmap",
 			"ascent": 13,
 			"height": 89,
-			"chars": ["\uFF01"],
+			"chars": ["\uEE01"],
 			"file": "mekanism:gui/solar_generator.png"
 		},
 		{
 			"type": "bitmap",
 			"ascent": 13,
 			"height": 89,
-			"chars": ["\uFF02"],
+			"chars": ["\uEE02"],
 			"file": "mekanism:gui/slots_config.png"
 		},
 		{
 			"type": "bitmap",
 			"ascent": 13,
 			"height": 89,
-			"chars": ["\uFF03"],
+			"chars": ["\uEE03"],
 			"file": "mekanism:gui/metallurgic_infuser.png"
 		},
 		{
 			"type": "bitmap",
 			"ascent": 13,
 			"height": 89,
-			"chars": ["\uFF04"],
+			"chars": ["\uEE04"],
 			"file": "mekanism:gui/energized_smelter.png"
 		}
 	]

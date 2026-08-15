@@ -129,10 +129,10 @@ public class TestCommand implements BasicCommand {
                 20, 21, 22, 23, 24
         };
 
-        List<List<ItemStack>> frames = new ArrayList<>();
+        ItemStack[][] frames = new ItemStack[15][11];
 
         for (int i = 0; i < 15; i++) {
-            List<ItemStack> slotFrames = new ArrayList<>(6);
+            ItemStack[] slotFrames = new ItemStack[11];
 
             for (int lvl = 0; lvl < 11; lvl++) {
                 int cmd = i << 4 | lvl;
@@ -149,10 +149,10 @@ public class TestCommand implements BasicCommand {
                 item.setData(DataComponentTypes.CUSTOM_MODEL_DATA, customModelData);
                 item.setData(DataComponentTypes.ITEM_MODEL, Key.key("mekanism", "energy_indicator"));
 
-                slotFrames.add(item);
+                slotFrames[lvl] = item;
             }
 
-            frames.add(slotFrames);
+            frames[i] = slotFrames;
         }
 
         // 100          capacity

@@ -41,6 +41,10 @@ tasks {
         dependsOn(shadowJar)
     }
 
+    reobfJar {
+        inputJar.set(shadowJar.flatMap { it.archiveFile })
+    }
+
     runServer {
         minecraftVersion(libs.versions.minecraft.get())
         jvmArgs("-Xms2G", "-Xmx2G", "-Dcom.mojang.eula.agree=true")
