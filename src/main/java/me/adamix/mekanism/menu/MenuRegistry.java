@@ -79,9 +79,9 @@ public class MenuRegistry {
                 List.of(
                         new ButtonWidget(0, itemRegistry.closeIcon(), menuService::closeSubmenu),
                         slotIndicatorWidget(13, RelativeFace.TOP, NetworkType.ENERGY),
-                        slotIndicatorWidget(21, RelativeFace.LEFT, NetworkType.ENERGY),
+                        slotIndicatorWidget(21, RelativeFace.RIGHT, NetworkType.ENERGY),
                         slotIndicatorWidget(22, RelativeFace.FRONT, NetworkType.ENERGY),
-                        slotIndicatorWidget(23, RelativeFace.RIGHT, NetworkType.ENERGY),
+                        slotIndicatorWidget(23, RelativeFace.LEFT, NetworkType.ENERGY),
                         slotIndicatorWidget(30, RelativeFace.BACK, NetworkType.ENERGY),
                         slotIndicatorWidget(31, RelativeFace.BOTTOM, NetworkType.ENERGY),
                         emptySlot(2),
@@ -241,9 +241,7 @@ public class MenuRegistry {
         return new ButtonIndicatorWidget(
                 slot,
                 (player, instance) -> {
-                    var face = relativeFace
-                            .flipLeftRight() // We flip left and right, cause the directions should be relative to player, not where the block is facing
-                            .toWorldFace(instance.getFacing());
+                    var face = relativeFace.toWorldFace(instance.getFacing());
 
                     Map<BlockFace, PortType> ports = switch (networkType) {
                         case ENERGY -> instance.get(EnergyComponent.class).orElseThrow().getPorts();
