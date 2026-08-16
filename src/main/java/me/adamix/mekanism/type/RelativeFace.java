@@ -40,4 +40,10 @@ public enum RelativeFace {
 
         return RelativeFace.LEFT;
     }
+
+    public @NotNull RelativeFace flipLeftRight() {
+        if (this == RelativeFace.LEFT) return RelativeFace.RIGHT;
+        if (this == RelativeFace.RIGHT) return RelativeFace.LEFT;
+        return this;
+    }
 }
