@@ -2,6 +2,7 @@ package me.adamix.mekanism.block;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import me.adamix.mekanism.block.instance.BlockInstanceService;
 import me.adamix.mekanism.block.persistence.BlockPersistenceService;
 import me.adamix.mekanism.block.registry.BlockDefinition;
 import me.adamix.mekanism.block.registry.BlockRegistry;
@@ -32,6 +33,7 @@ import static me.adamix.utils.Utils.todo;
 public class BlockService {
     private final BlockRegistry blockRegistry;
     private final BlockPersistenceService blockPersistenceService;
+    private final BlockInstanceService blockInstanceService;
 
     private final Map<WorldPos, MekanismBlockType> locationToType = new HashMap<>();
     private final Map<WorldPos, ItemDisplay> locationToEntity = new HashMap<>();
@@ -143,7 +145,11 @@ public class BlockService {
                 .map(w -> new StoredBlock(
                         w.block(),
                         locationToType.get(w),
-                        locationToEntity.get(w).getUniqueId()
+                        locationToEntity.get(w)
+                                .getUniqueId(),
+                        blockInstanceService.get(w)
+                                .orElseThrow()
+                                .getFacing()
                 ))
                 .toList();
 

@@ -24,8 +24,10 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
@@ -41,33 +43,33 @@ public class NetworkService {
     private final Logger log;
     private final Map<UUID, AbstractNetwork> networksById = new ConcurrentHashMap<>();
     private final Map<WorldPos, UUID> transporterToId = new ConcurrentHashMap<>();
-    private final Map<WorldPos, Map<BlockFace, NetworkPort>> portsOf = new ConcurrentHashMap<>();
+    private final Map<WorldPos, Map<BlockFace, Set<NetworkPort>>> portsOf = new ConcurrentHashMap<>();
     private final Map<WorldPos, Map<BlockFace, UUID>> externalPorts = new ConcurrentHashMap<>();
     private final BlockPersistenceService blockPersistenceService;
     private final BlockInstanceService instanceService;
 
-    public @NotNull Optional<AbstractNetwork> getNetwork(@NotNull WorldPos pos, @NotNull BlockFace face) {
-        UUID networkId = null;
+    public @NotNull List<AbstractNetwork> getNetworks(@NotNull WorldPos pos, @NotNull BlockFace face) {
+        List<UUID> networkIds = new ArrayList<>(1);
         if (transporterToId.containsKey(pos)) {
-            networkId = transporterToId.get(pos);
+            networkIds.add(transporterToId.get(pos));
         }
         if (portsOf.containsKey(pos)) {
             var ports = portsOf.get(pos)
                     .get(face);
             if (ports != null) {
-                networkId = ports.getNetworkId();
+                ports.stream()
+                        .map(NetworkPort::getNetworkId)
+                        .forEach(networkIds::add);
             }
         }
         if (externalPorts.containsKey(pos)) {
-            networkId = externalPorts.get(pos)
-                    .get(face);
+            networkIds.add(externalPorts.get(pos)
+                    .get(face));
         }
 
-        if (networkId == null) {
-            return Optional.empty();
-        }
-
-        return Optional.ofNullable(networksById.get(networkId));
+        return networkIds.stream()
+                .map(networksById::get)
+                .toList();
     }
 
     public @NotNull AbstractNetwork createNetwork(@NotNull NetworkType type, @NotNull String worldName) {
@@ -150,44 +152,45 @@ public class NetworkService {
     }
 
     public @NotNull NetworkContext scanSurroundings(@NotNull WorldPos pos, @Nullable NetworkType type) {
-        Map<BlockFace, AbstractNetwork> map = new HashMap<>();
+        Map<BlockFace, List<AbstractNetwork>> map = new HashMap<>();
 
         for (Tuple<WorldPos, BlockFace> tuple : BlockUtils.getSurroundings(pos)) {
             WorldPos surrounding = tuple.left();
             BlockFace face = tuple.right();
 
-            UUID networkId = null;
+            List<UUID> networkIds = new ArrayList<>(0);
 
             if (transporterToId.containsKey(surrounding)) {
-                networkId = transporterToId.get(surrounding);
+                networkIds.add(transporterToId.get(surrounding));
             } else if (portsOf.containsKey(surrounding)) {
                 var ports = portsOf.get(surrounding);
 
                 if (ports.containsKey(face.getOppositeFace())) {
-                    networkId = ports.get(face.getOppositeFace())
-                            .getNetworkId();
+                    ports.get(face.getOppositeFace()).stream()
+                            .map(NetworkPort::getNetworkId)
+                            .forEach(networkIds::add);
                 }
             } else if (externalPorts.containsKey(surrounding)) {
                 var ports = externalPorts.get(surrounding);
-                networkId = ports.get(face.getOppositeFace());
+                networkIds.add(ports.get(face.getOppositeFace()));
             }
+            if (networkIds.isEmpty()) continue;
 
-            if (networkId == null) continue;
+            for (UUID networkId : networkIds) {
+                AbstractNetwork network = networksById.get(networkId);
+                if (network == null) {
+                    log.error("Surrounding block has network id that does not exist in network map. Maybe zombie block?");
+                    continue;
+                }
 
-            AbstractNetwork network = networksById.get(networkId);
-            if (network == null) {
-                log.error("Surrounding block has network id that does not exist in network map. Maybe zombie block?");
-                continue;
+                if (type != null && network.type() != type) continue;
+
+                map.computeIfAbsent(tuple.right(), _ -> new ArrayList<>(1))
+                        .add(network);
             }
-
-            if (type != null && network.type() != type) continue;
-
-            map.put(tuple.right(), network);
         }
 
-        return new NetworkContext(
-                map
-        );
+        return new NetworkContext(map);
     }
 
     public void registerBlock(
@@ -227,28 +230,30 @@ public class NetworkService {
             @NotNull WorldPos pos,
             @NotNull BlockFace face
     ) {
-        NetworkPort port = portsOf.get(pos).get(face);
-        if (port == null) return;
+        Set<NetworkPort> ports = portsOf.get(pos).get(face);
+        if (ports == null) return;
 
-        UUID networkId = port.getNetworkId();
+        for (NetworkPort port : ports) {
+            UUID networkId = port.getNetworkId();
 
-        AbstractNetwork network = networksById.get(networkId);
-        if (network == null) {
-            // TODO Handle somehow idk
-            return;
+            AbstractNetwork network = networksById.get(networkId);
+            if (network == null) {
+                // TODO Handle somehow idk
+                return;
+            }
+
+            if (port.getPortType() == PortType.INPUT) {
+                network.removeConsumer(port);
+            } else if (port.getPortType() == PortType.OUTPUT) {
+                network.removeProducer(port);
+            }
+
+            if (network.isEmpty()) {
+                networksById.remove(networkId);
+            }
+
+            portsOf.get(pos).remove(face);
         }
-
-        if (port.getPortType() == PortType.INPUT) {
-            network.removeConsumer(port);
-        } else if (port.getPortType() == PortType.OUTPUT) {
-            network.removeProducer(port);
-        }
-
-        if (network.isEmpty()) {
-            networksById.remove(networkId);
-        }
-
-        portsOf.get(pos).remove(face);
     }
 
     public void registerPorts(
@@ -258,7 +263,7 @@ public class NetworkService {
             @NotNull Map<BlockFace, PortType> ports
     ) {
         NetworkContext networkContext = scanSurroundings(pos);
-        Map<BlockFace, AbstractNetwork> map = networkContext.networkMap();
+        Map<BlockFace, AbstractNetwork> map = networkContext.filter(networkType);
 
         Map<BlockFace, NetworkPort> faceToId = new HashMap<>();
         Set<BlockFace> connectedFaces = new HashSet<>();
@@ -325,7 +330,8 @@ public class NetworkService {
 //            if (registryPorts.containsKey(face)) {
 //                throw new IllegalStateException("Trying to register port for block with already registered port for " + face);
 //            }
-            registryPorts.put(face, port);
+            registryPorts.computeIfAbsent(face, _ -> new HashSet<>())
+                            .add(port);
         });
     }
 
@@ -338,7 +344,7 @@ public class NetworkService {
         WorldPos pos = WorldPos.of(block);
 
         NetworkContext networkContext = scanSurroundings(pos, component.type());
-        Map<BlockFace, AbstractNetwork> map = networkContext.networkMap();
+        Map<BlockFace, AbstractNetwork> map = networkContext.filter(component.type());
         var surroundingNetworks = new HashSet<>(map.values());
 
         AbstractNetwork network;

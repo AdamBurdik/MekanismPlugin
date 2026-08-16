@@ -3,6 +3,7 @@ package me.adamix.mekanism.type.pdc;
 import me.adamix.mekanism.block.MekanismBlockType;
 import me.adamix.mekanism.type.BlockPos;
 import me.adamix.mekanism.type.StoredBlock;
+import org.bukkit.block.BlockFace;
 import org.bukkit.persistence.PersistentDataAdapterContext;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
@@ -43,6 +44,9 @@ public class StoredBlockListDataType implements PersistentDataType<byte[], List<
                 // Block Type
                 dos.writeUTF(block.type().name());
 
+                // Block Facing
+                dos.writeUTF(block.facing().name());
+
                 // Entity UUID (Most & Least Significant Bits)
                 dos.writeLong(block.entityId().getMostSignificantBits());
                 dos.writeLong(block.entityId().getLeastSignificantBits());
@@ -67,6 +71,7 @@ public class StoredBlockListDataType implements PersistentDataType<byte[], List<
                 int y = dis.readInt();
                 int z = dis.readInt();
                 String typeName = dis.readUTF();
+                String facingName = dis.readUTF();
 
                 // Read UUID bits
                 long mostSig = dis.readLong();
@@ -75,8 +80,9 @@ public class StoredBlockListDataType implements PersistentDataType<byte[], List<
 
                 BlockPos pos = new BlockPos(x, y, z);
                 MekanismBlockType type = MekanismBlockType.valueOf(typeName);
+                BlockFace facing = BlockFace.valueOf(facingName);
 
-                list.add(new StoredBlock(pos, type, entityId));
+                list.add(new StoredBlock(pos, type, entityId, facing));
             }
 
             return list;

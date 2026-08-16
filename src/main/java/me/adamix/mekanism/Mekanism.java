@@ -63,7 +63,7 @@ public final class Mekanism extends JavaPlugin {
 
         BlockTickService blockTickService = new BlockTickService(blockPersistenceService);
         networkService = new NetworkService(getSLF4JLogger(), blockPersistenceService, blockInstanceService);
-        BlockService blockService = new BlockService(blockRegistry, blockPersistenceService);
+        BlockService blockService = new BlockService(blockRegistry, blockPersistenceService, blockInstanceService);
 
         blockFacade = new BlockFacade(
                 blockService,

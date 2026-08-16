@@ -65,7 +65,7 @@ public class ChunkListener implements Listener {
 
             BlockInstance instance = definition.handler().createBlockInstance(
                     block,
-                    BlockFace.NORTH,
+                    stored.facing(),
                     stored.type(),
                     networkContext,
                     definition
@@ -79,7 +79,7 @@ public class ChunkListener implements Listener {
                         definition,
                         networkContext,
                         instance,
-                        BlockFace.NORTH
+                        stored.facing()
                 );
             }
 

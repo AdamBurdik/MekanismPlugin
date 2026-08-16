@@ -34,24 +34,25 @@ public class DebugCommand implements BasicCommand {
     private void network(@NotNull Player player) {
         Block block = player.getTargetBlockExact(10);
         BlockFace face = player.getTargetBlockFace(10);
-        if (block == null) {
+        if (block == null || face == null) {
             player.sendMessage("No block found");
             return;
         }
 
-        var opt = networkService.getNetwork(WorldPos.of(block), face);
-        if (opt.isEmpty()) {
+        var networks = networkService.getNetworks(WorldPos.of(block), face);
+        if (networks.isEmpty()) {
             player.sendMessage("No network found for this block");
             return;
         }
 
-        var network = opt.get();
-        player.sendMessage("===================");
-        player.sendMessage("Network id: " + network.getId());
-        player.sendMessage("Network type: " + network.type());
-        player.sendMessage("===================");
+        for (AbstractNetwork network : networks) {
+            player.sendMessage("===================");
+            player.sendMessage("Network id: " + network.getId());
+            player.sendMessage("Network type: " + network.type());
+            player.sendMessage("===================");
+            networkInfo(player, network);
+        }
 
-        networkInfo(player, network);
     }
 
     private void instance(@NotNull Player player) {

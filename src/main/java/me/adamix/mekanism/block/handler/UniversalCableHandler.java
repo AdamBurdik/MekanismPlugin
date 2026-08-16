@@ -6,6 +6,7 @@ import io.papermc.paper.datacomponent.item.CustomModelData;
 import me.adamix.mekanism.block.BlockInstance;
 import me.adamix.mekanism.block.MekanismBlockType;
 import me.adamix.mekanism.block.registry.BlockDefinition;
+import me.adamix.mekanism.network.AbstractNetwork;
 import me.adamix.mekanism.network.NetworkContext;
 import me.adamix.mekanism.network.NetworkType;
 import me.adamix.mekanism.type.WorldPos;
@@ -56,9 +57,11 @@ public class UniversalCableHandler implements BlockHandler {
         byte i = 1;
 
         for (BlockFace face : BlockUtils.CARDINAL_DIRECTIONS) {
-            var network = networkContext.get(face);
-            if (network.isPresent() && network.get().type() == NetworkType.ENERGY) {
-                state |= i;
+            var networks = networkContext.get(face);
+            for (AbstractNetwork network : networks) {
+                if (network.type() == NetworkType.ENERGY) {
+                    state |= i;
+                }
             }
 
             i = (byte) (i << 1);

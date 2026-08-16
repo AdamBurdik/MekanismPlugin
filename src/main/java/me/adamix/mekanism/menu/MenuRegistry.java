@@ -229,7 +229,7 @@ public class MenuRegistry {
     private final Map<PortType, ItemStack> portToSlotIndicatorItem = Map.of(
             PortType.INPUT, slotIndicatorSupplier.apply("Input", SlotType.BLUE),
             PortType.OUTPUT, slotIndicatorSupplier.apply("Output", SlotType.DARK_RED),
-            PortType.BOTH, slotIndicatorSupplier.apply("Both", SlotType.GREEN),
+            PortType.BOTH, slotIndicatorSupplier.apply("Both", SlotType.PURPLE),
             PortType.DISABLED, slotIndicatorSupplier.apply("None", SlotType.NONE)
     );
 

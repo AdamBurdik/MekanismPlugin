@@ -1,6 +1,7 @@
 package me.adamix.mekanism.type;
 
 import me.adamix.mekanism.block.MekanismBlockType;
+import org.bukkit.block.BlockFace;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
@@ -8,6 +9,7 @@ import java.util.UUID;
 public record StoredBlock(
         @NotNull BlockPos pos,
         @NotNull MekanismBlockType type,
-        @NotNull UUID entityId
+        @NotNull UUID entityId,
+        @NotNull BlockFace facing
 ) {
 }
