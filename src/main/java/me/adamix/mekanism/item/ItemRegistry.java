@@ -45,7 +45,7 @@ public class ItemRegistry {
 
     private @NotNull ItemStack[] frames(int count, @NotNull String itemModel) {
         ItemStack[] frames = new ItemStack[count];
-        for (int i = 0; i < 24; i++) {
+        for (int i = 0; i < count; i++) {
             ItemStack item = ItemStack.of(Material.PAPER);
             CustomModelData customModelData = CustomModelData.customModelData()
                     .addString(Integer.toString(i))
