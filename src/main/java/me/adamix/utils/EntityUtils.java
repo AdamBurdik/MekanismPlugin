@@ -33,13 +33,11 @@ public class EntityUtils {
     }
 
     public static @NotNull ItemDisplay spawnItemDisplay(
-            @NotNull Block block,
+            @NotNull Location location,
             @NotNull BlockDefinition definition,
             @Nullable CustomModelData customModelData
-
     ) {
-        World world = block.getWorld();
-        Location location = block.getLocation();
+        World world = location.getWorld();
         Location offsetLoc = location.clone()
                 .add(0.5, 0.5, 0.5);
 

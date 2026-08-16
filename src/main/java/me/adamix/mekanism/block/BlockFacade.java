@@ -71,7 +71,8 @@ public class BlockFacade {
                 block,
                 type,
                 networkContext,
-                instance
+                instance,
+                facing
         );
 
         blockService.saveToChunkPdc(pos);

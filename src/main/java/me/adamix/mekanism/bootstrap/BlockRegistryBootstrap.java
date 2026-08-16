@@ -8,7 +8,7 @@ import me.adamix.mekanism.block.component.SmelterComponent;
 import me.adamix.mekanism.block.component.network.EnergyComponent;
 import me.adamix.mekanism.block.component.network.TransporterComponent;
 import me.adamix.mekanism.block.handler.EnergyCubeHandler;
-import me.adamix.mekanism.block.handler.GenericBlockHandler;
+import me.adamix.mekanism.block.handler.DirectionalBlockHandler;
 import me.adamix.mekanism.block.handler.SolarGeneratorHandler;
 import me.adamix.mekanism.block.handler.TransporterBlockHandler;
 import me.adamix.mekanism.block.handler.UniversalCableHandler;
@@ -98,7 +98,7 @@ public class BlockRegistryBootstrap {
                         _ -> energyComponent(800, 100, 100, 0),
                         _ -> new SmelterComponent(ports(), recipeRegistry)
                 ),
-                new GenericBlockHandler(),
+                new DirectionalBlockHandler(),
                 menuRegistry.energizedSmelter()
         ));
         registry.register(MekanismBlockType.METALLURGIC_INFUSER, new BlockDefinition(
@@ -110,7 +110,7 @@ public class BlockRegistryBootstrap {
                         _ -> energyComponent(8000, 100, 100, 0),
                         _ -> new InfuserComponent(ports(), new InfusionStorage(null, 0, 1000), infusionTypeRegistry, recipeRegistry)
                 ),
-                new GenericBlockHandler(),
+                new DirectionalBlockHandler(),
                 menuRegistry.metallurgicInfuser()
         ));
         registry.register(MekanismBlockType.SOLAR_GENERATOR, new BlockDefinition(

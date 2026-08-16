@@ -5,20 +5,25 @@ import me.adamix.mekanism.block.MekanismBlockType;
 import me.adamix.mekanism.block.registry.BlockDefinition;
 import me.adamix.mekanism.network.NetworkContext;
 import me.adamix.utils.EntityUtils;
+import org.bukkit.Location;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.ItemDisplay;
 import org.jetbrains.annotations.NotNull;
 
-public class GenericBlockHandler implements BlockHandler {
+public class DirectionalBlockHandler implements BlockHandler {
     @Override
     public @NotNull ItemDisplay spawnEntity(
             @NotNull Block block,
             @NotNull MekanismBlockType type,
             @NotNull BlockDefinition definition,
             @NotNull NetworkContext networkContext,
-            @NotNull BlockInstance instance
+            @NotNull BlockInstance instance,
+            @NotNull BlockFace facing
     ) {
-        return EntityUtils.spawnItemDisplay(block, definition, null);
+        Location location = block.getLocation();
+        Location rotated = location.setDirection(facing.getDirection());
+        return EntityUtils.spawnItemDisplay(rotated, definition, null);
     }
 
     @Override

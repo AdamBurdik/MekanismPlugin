@@ -241,7 +241,9 @@ public class MenuRegistry {
         return new ButtonIndicatorWidget(
                 slot,
                 (player, instance) -> {
-                    var face = relativeFace.toWorldFace(instance.getFacing());
+                    var face = relativeFace
+                            .flipLeftRight() // We flip left and right, cause the directions should be relative to player, not where the block is facing
+                            .toWorldFace(instance.getFacing());
 
                     Map<BlockFace, PortType> ports = switch (networkType) {
                         case ENERGY -> instance.get(EnergyComponent.class).orElseThrow().getPorts();

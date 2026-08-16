@@ -73,7 +73,8 @@ public class EnergyCubeHandler implements BlockHandler {
             @NotNull MekanismBlockType type,
             @NotNull BlockDefinition definition,
             @NotNull NetworkContext networkContext,
-            @NotNull BlockInstance instance
+            @NotNull BlockInstance instance,
+            @NotNull BlockFace facing
     ) {
         Location location = block.getLocation();
         Location offsetLoc = location.clone()

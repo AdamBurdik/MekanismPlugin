@@ -32,7 +32,8 @@ public interface BlockHandler {
             @NotNull MekanismBlockType type,
             @NotNull BlockDefinition definition,
             @NotNull NetworkContext networkContext,
-            @NotNull BlockInstance instance
+            @NotNull BlockInstance instance,
+            @NotNull BlockFace facing
     );
 
     void updateBlock(

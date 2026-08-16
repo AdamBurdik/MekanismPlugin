@@ -12,7 +12,9 @@ import me.adamix.mekanism.type.StoredBlock;
 import me.adamix.mekanism.type.WorldPos;
 import me.adamix.mekanism.type.pdc.StoredBlockListDataType;
 import org.bukkit.Chunk;
+import org.bukkit.Location;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.jetbrains.annotations.NotNull;
@@ -76,7 +78,8 @@ public class BlockService {
             @NotNull Block block,
             @NotNull MekanismBlockType type,
             @NotNull NetworkContext networkContext,
-            @NotNull BlockInstance instance
+            @NotNull BlockInstance instance,
+            @NotNull BlockFace facing
     ) {
         BlockDefinition definition = blockRegistry.getOrThrow(type);
 
@@ -85,7 +88,8 @@ public class BlockService {
                 type,
                 definition,
                 networkContext,
-                instance
+                instance,
+                facing
         );
         locationToEntity.put(WorldPos.of(block), entity);
     }

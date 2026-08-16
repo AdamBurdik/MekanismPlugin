@@ -78,7 +78,8 @@ public class ChunkListener implements Listener {
                         stored.type(),
                         definition,
                         networkContext,
-                        instance
+                        instance,
+                        BlockFace.NORTH
                 );
             }
 

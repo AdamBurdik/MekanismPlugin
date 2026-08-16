@@ -41,13 +41,14 @@ public record TransporterBlockHandler(
             @NotNull MekanismBlockType type,
             @NotNull BlockDefinition definition,
             @NotNull NetworkContext networkContext,
-            @NotNull BlockInstance instance
+            @NotNull BlockInstance instance,
+            @NotNull BlockFace facing
     ) {
         CustomModelData customModelData = CustomModelData.customModelData()
                 .addString(Byte.toString(getModelState(networkContext)))
                 .build();
 
-        return EntityUtils.spawnItemDisplay(block, definition, customModelData);
+        return EntityUtils.spawnItemDisplay(block.getLocation(), definition, customModelData);
     }
 
     @Override
